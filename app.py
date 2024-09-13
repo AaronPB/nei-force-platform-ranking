@@ -5,15 +5,15 @@ from pages import ranking, info, dashboard, settings
 def main():
     # Page configuration
     st.set_page_config(
-        page_title="Force Platform Reader",
-        page_icon="images/project_icon.png",
+        page_title="Platform Ranking",
+        page_icon="images/app_icon.png",
         layout="wide",
         initial_sidebar_state="collapsed",
     )
     # Logo
     st.logo(
-        image="images/project_logo.png",
-        icon_image="images/project_icon.png",
+        image="images/app_logo.png",
+        icon_image="images/app_icon.png",
         link="https://github.com/AaronPB",
     )
     # Load pages
