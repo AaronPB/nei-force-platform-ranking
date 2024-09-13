@@ -1,0 +1,26 @@
+{
+    "name": "nei_force_platform_ranking-dev",
+    "build": {
+      "dockerfile": "../Dockerfile.dev",
+      "context": ".."
+    },
+    "runArgs": [
+      "--privileged", // Necessary to access multiple serial ports
+      "-v", "/dev:/dev" // To access USB dirs
+    ],
+    // Configure tool-specific properties.
+    "customizations": {
+      // Configure properties specific to VS Code.
+      "vscode": {        
+        // Add the IDs of extensions you want installed when the container is created.
+        "extensions": [
+          "ms-python.black-formatter",
+          "ms-python.vscode-pylance",
+          "ms-python.python",
+          "ms-python.debugpy",
+          "naumovs.color-highlight",
+          "davidanson.vscode-markdownlint"
+        ]
+      }
+    }
+  }

@@ -1,0 +1,13 @@
+# App framework
+streamlit
+
+# Sensor API
+Phidget22
+
+# Data modules
+plotly
+numpy
+
+# Others
+loguru
+PyYAML
