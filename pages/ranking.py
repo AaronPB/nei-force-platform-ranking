@@ -1,8 +1,16 @@
 import streamlit as st
+from streamlit_carousel import carousel
 import pandas as pd
 
 # Just for graph testing
 import random
+
+# Define image sliders
+# TODO Add proper sliders
+sliders = [
+    dict(title="", text="", img="images/nei_almeria_2024.jpg"),
+    dict(title="", text="", img="images/force_platform_logo.png"),
+]
 
 
 def generateDataframe() -> pd.DataFrame:
@@ -21,7 +29,8 @@ def generateDataframe() -> pd.DataFrame:
 
 
 def ranking():
-    st.header(":material/scoreboard: Ranking del TOP 20")
+    carousel(items=sliders, controls=False, container_height=200)
+    st.header(":material/social_leaderboard: Ranking del TOP 20")
     st.write("¡Las 20 personas con mejor equilibrio al cerrar los ojos!")
 
     st.dataframe(

@@ -1,5 +1,6 @@
 # App framework
 streamlit
+streamlit-carousel
 
 # Sensor API
 Phidget22
