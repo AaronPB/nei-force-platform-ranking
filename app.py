@@ -48,43 +48,60 @@ def main():
         )
     if "platforms_connected" not in st.session_state:
         st.session_state.platforms_connected = False
+    if "demo_enabled" not in st.session_state:
+        st.session_state.demo_enabled = False
+
+    if st.session_state.get("toggle_demo", False):
+        st.session_state.demo_enabled = True
+    else:
+        st.session_state.demo_enabled = False
 
     btn_connect_sensors = st.sidebar.button(
         label="Conectar plataformas",
         key="btn_sensors",
         type="primary",
         use_container_width=True,
+        disabled=st.session_state.demo_enabled,
     )
 
-    platform_status = st.sidebar.empty()
+    if not st.session_state.demo_enabled:
+        platform_status = st.sidebar.empty()
 
-    if btn_connect_sensors:
-        st.session_state.platforms_connected = False
-        with platform_status.status("Conectando sensores..."):
-            st.session_state.test_mngr.checkConnection()
-        platform_status.empty()
+        if btn_connect_sensors:
+            st.session_state.platforms_connected = False
+            with platform_status.status("Conectando sensores..."):
+                st.session_state.test_mngr.checkConnection()
+            platform_status.empty()
 
-    sensor_groups = st.session_state.sensor_mngr.getGroups()
-    connected_sensor = 0
-    for group in sensor_groups:
-        connected_sensor += len(group.getSensors(only_available=True))
+        sensor_groups = st.session_state.sensor_mngr.getGroups()
+        connected_sensor = 0
+        for group in sensor_groups:
+            connected_sensor += len(group.getSensors(only_available=True))
 
-    if connected_sensor == 0:
-        st.sidebar.error(
-            "Conecta las plataformas.",
-            icon=":material/error:",
-        )
-    elif connected_sensor < 24:
-        st.sidebar.warning(
-            f"{connected_sensor} de 24 sensores conectados.",
-            icon=":material/change_circle:",
-        )
-    elif connected_sensor == 24:
-        st.sidebar.success(
-            "Plataformas conectadas.",
-            icon=":material/check_circle:",
-        )
-        st.session_state.platforms_connected = True
+        if connected_sensor == 0:
+            st.sidebar.error(
+                "Conecta las plataformas.",
+                icon=":material/error:",
+            )
+        elif connected_sensor < 24:
+            st.sidebar.warning(
+                f"{connected_sensor} de 24 sensores conectados.",
+                icon=":material/change_circle:",
+            )
+        elif connected_sensor == 24:
+            st.sidebar.success(
+                "Plataformas conectadas.",
+                icon=":material/check_circle:",
+            )
+            st.session_state.platforms_connected = True
+
+    if st.session_state.demo_enabled:
+        st.sidebar.success("Modo demo activo.", icon=":material/build_circle:")
+    st.sidebar.divider()
+    st.sidebar.toggle(
+        label="Activar demo",
+        key="toggle_demo",
+    )
 
 
 if __name__ == "__main__":
