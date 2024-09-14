@@ -72,13 +72,9 @@ achievement_area_percentage = {
 }
 
 
-def getAchievements() -> dict:
-    # TODO change vars to actual data
-    position = 45
-    area = 1.23
-    percentage = 19.34
-
+def getAchievements(position: int, total: int, area: float) -> dict:
     achievements = {}
+    percentage = position / total * 100
 
     # Check achievements for position
     for key in sorted(achievement_top.keys()):
@@ -138,34 +134,42 @@ def dashboard():
     logger.debug(st.session_state.recording)
     logger.debug(st.session_state.results.empty)
 
+    # Show results instead of recording button
     if st.session_state.recording and not st.session_state.results.empty:
         st.header("Resultados")
         # TODO Check results to load multiple achievements
-        achievements = getAchievements()
+        # TODO change vars to actual data
+        position = 670
+        total = 893
+        area = 5.32
+        metric_col1, metric_col2 = st.columns(2)
+        metric_col1.metric(
+            "Posición ranking", f"Puesto nº {position}", f"De {total} personas", "off"
+        )
+        metric_col2.metric("Área total trayectoria", f"{area} cm2")
+
+        achievements = getAchievements(position, total, area)
         if achievements:
             for achievement in achievements.values():
                 st.warning(achievement[0], icon=achievement[1])
             st.balloons()
         else:
             st.snow()
-        st.data_editor(
-            data=st.session_state.results,
-            use_container_width=True,
-            hide_index=True,
-            disabled=("Area", "Puntuación"),
-        )
 
         col1, col2 = st.columns(2)
         col1.button(
             label="Guardar", key="btn_save", type="primary", use_container_width=True
         )
         col2.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
+
+        st.header("Trayectorias del centro de presión")
+        # TODO Build COP graphs with plotly
         return
 
     if not st.session_state.recording and st.session_state.results.empty:
         st.info("Colócate en las plataformas", icon=":material/settings_accessibility:")
 
-    _, countdown_col, _ = st.columns([1, 0.5, 1])
+    _, countdown_col, _ = st.columns([2, 0.5, 2])
     countdown = countdown_col.empty()
 
     btn_record_start = st.button(
@@ -179,9 +183,8 @@ def dashboard():
     if btn_record_start:
         with st.status("Iniciando grabación...") as status:
             # TODO Connect sensors
-            time.sleep(0.5)
             for i in range(3, 0, -1):
-                countdown.metric("¡Preparados!", i)
+                countdown.metric("Iniciando", i)
                 time.sleep(1)
             status.update(label="Grabando...")
             for i in range(100, -1, -1):
