@@ -6,6 +6,101 @@ from pages import ranking
 
 from loguru import logger
 
+achievement_top = {
+    1: [
+        "**TOP 1** - ¡¡Has quedado en primera posición!!",
+        ":material/social_leaderboard:",
+    ],
+    2: [
+        "**TOP 2** - ¡¡Has quedado en segunda posición!!",
+        ":material/social_leaderboard:",
+    ],
+    3: [
+        "**TOP 3** - ¡¡Has quedado en tercera posición!!",
+        ":material/social_leaderboard:",
+    ],
+    5: [
+        "**TOP 5** - ¡¡Has quedado entre los 5 primeros!!",
+        ":material/social_leaderboard:",
+    ],
+    10: [
+        "**TOP 10** - ¡¡Has quedado entre los 10 primeros!!",
+        ":material/social_leaderboard:",
+    ],
+    15: [
+        "**TOP 15** - ¡Has quedado entre los 15 primeros!",
+        ":material/social_leaderboard:",
+    ],
+    20: [
+        "**TOP 20** - ¡Has quedado entre los 20 primeros!",
+        ":material/social_leaderboard:",
+    ],
+}
+
+achievement_area = {
+    0: [
+        "**Ni un pelo** - ¡¡Tu equilibrio es perfecto!!",
+        ":material/trophy:",
+    ],
+    1: [
+        "**Nervios de acero** - ¡Sólido como un muro!",
+        ":material/trophy:",
+    ],
+    2: [
+        "**Sin respiración** - ¡Has mantenido la postura!",
+        ":material/trophy:",
+    ],
+    3: [
+        "**Con cuatro sentidos** - ¡No te hace falta la vista para mantener el equilibrio!",
+        ":material/trophy:",
+    ],
+}
+
+achievement_area_percentage = {
+    10: [
+        "**Del gremio de las estatuas** - ¡Estás dentro del **10%** de personas con mejor equilibrio!",
+        ":material/clock_loader_10:",
+    ],
+    20: [
+        "**Lo puedes hacer sin oídos también** - Perteneces al **20%** de personas con mejor equilibrio",
+        ":material/clock_loader_20:",
+    ],
+    40: [
+        "**Otra vez, por favor** - Eres parte del **40%** de personas con mejor equilibrio.",
+        ":material/clock_loader_40:",
+    ],
+}
+
+
+def getAchievements() -> dict:
+    # TODO change vars to actual data
+    position = 45
+    area = 1.23
+    percentage = 19.34
+
+    achievements = {}
+
+    # Check achievements for position
+    for key in sorted(achievement_top.keys()):
+        if position <= key:
+            achievements["position"] = achievement_top[key]
+            break
+
+    # If not in TOP20, check achievements for percentage
+    if not achievements:
+        for key in sorted(achievement_area_percentage.keys()):
+            if percentage <= key:
+                achievements["percentage"] = achievement_area_percentage[key]
+                break
+
+    # Check achievements for area
+    for key in sorted(achievement_area.keys()):
+        if key <= area < key + 1:
+            achievements["area"] = achievement_area[key]
+            break
+
+    return achievements
+
 
 def getData() -> pd.DataFrame:
     return pd.DataFrame(
@@ -41,6 +136,31 @@ def dashboard():
         st.session_state.results = pd.DataFrame()
 
     logger.debug(st.session_state.recording)
+    logger.debug(st.session_state.results.empty)
+
+    if st.session_state.recording and not st.session_state.results.empty:
+        st.header("Resultados")
+        # TODO Check results to load multiple achievements
+        achievements = getAchievements()
+        if achievements:
+            for achievement in achievements.values():
+                st.warning(achievement[0], icon=achievement[1])
+            st.balloons()
+        else:
+            st.snow()
+        st.data_editor(
+            data=st.session_state.results,
+            use_container_width=True,
+            hide_index=True,
+            disabled=("Area", "Puntuación"),
+        )
+
+        col1, col2 = st.columns(2)
+        col1.button(
+            label="Guardar", key="btn_save", type="primary", use_container_width=True
+        )
+        col2.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
+        return
 
     if not st.session_state.recording and st.session_state.results.empty:
         st.info("Colócate en las plataformas", icon=":material/settings_accessibility:")
@@ -76,16 +196,4 @@ def dashboard():
         st.session_state.results = getData()
         time.sleep(3)
         status.update(label="¡Completado!", state="complete")
-
-    if st.session_state.recording and not st.session_state.results.empty:
-        st.write("¡Aquí están los resultados!")
-        st.data_editor(
-            data=st.session_state.results,
-            use_container_width=True,
-            hide_index=True,
-            disabled=("Area", "Puntuación"),
-        )
-
-        col1, col2 = st.columns(2)
-        col1.button(label="Guardar",key="btn_save",type="primary",use_container_width=True)
-        col2.button(label="Cancelar",key="btn_rec_cancel",use_container_width=True)
+        st.switch_page(st.Page(dashboard))
