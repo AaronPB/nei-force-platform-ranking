@@ -1,75 +1,23 @@
 import streamlit as st
 import pandas as pd
+import yaml
 import time
 
 from pages import ranking
 
 from loguru import logger
 
-achievement_top = {
-    1: [
-        "**TOP 1** - ¡¡Has quedado en primera posición!!",
-        ":material/social_leaderboard:",
-    ],
-    2: [
-        "**TOP 2** - ¡¡Has quedado en segunda posición!!",
-        ":material/social_leaderboard:",
-    ],
-    3: [
-        "**TOP 3** - ¡¡Has quedado en tercera posición!!",
-        ":material/social_leaderboard:",
-    ],
-    5: [
-        "**TOP 5** - ¡¡Has quedado entre los 5 primeros!!",
-        ":material/social_leaderboard:",
-    ],
-    10: [
-        "**TOP 10** - ¡¡Has quedado entre los 10 primeros!!",
-        ":material/social_leaderboard:",
-    ],
-    15: [
-        "**TOP 15** - ¡Has quedado entre los 15 primeros!",
-        ":material/social_leaderboard:",
-    ],
-    20: [
-        "**TOP 20** - ¡Has quedado entre los 20 primeros!",
-        ":material/social_leaderboard:",
-    ],
-}
 
-achievement_area = {
-    0: [
-        "**Ni un pelo** - ¡¡Tu equilibrio es perfecto!!",
-        ":material/trophy:",
-    ],
-    1: [
-        "**Nervios de acero** - ¡Sólido como un muro!",
-        ":material/trophy:",
-    ],
-    2: [
-        "**Sin respiración** - ¡Has mantenido la postura!",
-        ":material/trophy:",
-    ],
-    3: [
-        "**Con cuatro sentidos** - ¡No te hace falta la vista para mantener el equilibrio!",
-        ":material/trophy:",
-    ],
-}
+def loadAchievementsFile(filepath: str) -> dict:
+    with open(filepath, "r", encoding="utf-8") as file:
+        data = yaml.safe_load(file)
+    return data
 
-achievement_area_percentage = {
-    10: [
-        "**Del gremio de las estatuas** - ¡Estás dentro del **10%** de personas con mejor equilibrio!",
-        ":material/clock_loader_10:",
-    ],
-    20: [
-        "**Lo puedes hacer sin oídos también** - Perteneces al **20%** de personas con mejor equilibrio",
-        ":material/clock_loader_20:",
-    ],
-    40: [
-        "**Otra vez, por favor** - Eres parte del **40%** de personas con mejor equilibrio.",
-        ":material/clock_loader_40:",
-    ],
-}
+
+achievements = loadAchievementsFile("files/achievements.yaml")
+achievement_top = achievements["achievement_top"]
+achievement_area = achievements["achievement_area"]
+achievement_area_percentage = achievements["achievement_area_percentage"]
 
 
 def getAchievements(position: int, total: int, area: float) -> dict:
