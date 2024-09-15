@@ -2,15 +2,12 @@
 
 import numpy as np
 import pandas as pd
+import os
 
 from plotly.subplots import make_subplots
-import plotly.express as px
 import plotly.graph_objs as go
 
-from src.managers.sensorManager import SensorManager
-from src.handlers import SensorGroup, Sensor
-from src.enums.sensorTypes import STypes
-from src.enums.sensorStatus import SGStatus
+from src.handlers import SensorGroup
 
 from loguru import logger
 
@@ -18,8 +15,28 @@ from loguru import logger
 class DataManager:
     def __init__(self):
         self.df_calibrated = pd.DataFrame()
-        self.df_scoreboard = pd.DataFrame(columns=["name", "cop", "area"])
-        self.df_scoreboard_sorted = pd.DataFrame(columns=["name", "cop", "area"])
+        self.df_scoreboard = pd.DataFrame(
+            columns=["name", "cop", "area", "score"],
+        )
+        self.df_scoreboard_sorted = pd.DataFrame(
+            columns=["name", "cop", "area", "score"],
+        )
+        # Load saved dataframe
+        self.file_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "files",
+            "data.csv",
+        )
+        if os.path.exists(self.file_path):
+            self.df_scoreboard = pd.read_csv(self.file_path)
+            df_scores = self.df_scoreboard.copy(deep=True)
+            self.df_scoreboard_sorted = df_scores.sort_values(
+                by="score", ascending=False
+            )
+            self.df_scoreboard_sorted = self.df_scoreboard_sorted.reset_index(drop=True)
+            self.df_scoreboard_sorted.index = self.df_scoreboard_sorted.index + 1
         # Plotly figure
         self.plotly_fig = COPFigure()
 
@@ -36,11 +53,14 @@ class DataManager:
                 ]
         self.plotly_fig.updateData(self.df_calibrated)
 
-    def updateScoreboard(self) -> None:
-        if df is None:
-            # Add results to scoreboard and save backup file
-            df = self.df_scoreboard.copy(deep=True)
-            self.df_scoreboard_sorted = df.sort_values(by="area", ascending=False)
+    def updateScoreboard(self, df: pd.DataFrame = None) -> None:
+        if df is not None:
+            self.df_scoreboard = pd.concat([self.df_scoreboard, df], ignore_index=True)
+        df_scores = self.df_scoreboard.copy(deep=True)
+        self.df_scoreboard_sorted = df_scores.sort_values(by="score", ascending=False)
+        self.df_scoreboard_sorted = self.df_scoreboard_sorted.reset_index(drop=True)
+        self.df_scoreboard_sorted.index = self.df_scoreboard_sorted.index + 1
+        self.df_scoreboard.to_csv(self.file_path, index=False)
 
     # Getters
 
@@ -57,7 +77,7 @@ class DataManager:
         score_min = 500
         score_max = 1000
         area = sum(areas)
-        total_cop = np.sum(cops_array, axis=0)
+        total_cop = np.sum(cops_array, axis=0).tolist()
         position = (
             np.searchsorted(self.df_scoreboard_sorted["area"].values, sum(areas)) + 1
         )
@@ -66,22 +86,12 @@ class DataManager:
         scale = (area_max - area) / area_max
         a = 2
         score = score_min + (score_max - score_min) * (a**scale - 1) / (a - 1)
-
-        df = pd.DataFrame(
-            {
-                "Nombre": "Tu Nombre",
-                "Trayectoria": [total_cop],
-                "Área elipse (cm2)": area,
-                "Puntuación": score,
-            },
-            index=["0"],
-        )
         return {
             "area": area,
             "score": score,
             "position": position,
             "total": total,
-            "dataframe": df,
+            "cop": total_cop,
         }
 
     def getScoreboard(self) -> pd.DataFrame:

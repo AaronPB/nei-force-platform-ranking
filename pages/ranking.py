@@ -2,8 +2,7 @@ import streamlit as st
 from streamlit_carousel import carousel
 import pandas as pd
 
-# Just for graph testing
-import random
+from src.managers import DataManager
 
 # Define image sliders
 # TODO Add proper sliders
@@ -13,32 +12,30 @@ sliders = [
 ]
 
 
-def generateDataframe() -> pd.DataFrame:
-    df = pd.DataFrame(
-        {
-            "Nombre": ["Usuario1", "Usuario2", "Usuario3"],
-            "Equilibrio": [
-                [random.randint(-3, 3) for _ in range(100)] for _ in range(3)
-            ],
-            "Área elipse (cm2)": [1.23, 2.32, 2.45],
-            "Puntuación": [950, 870, 340],
-        }
-    )
-    df.index = df.index + 1
-    return df
-
-
 def ranking():
+    # Managers
+    if "data_mngr" not in st.session_state:
+        st.session_state.data_mngr = DataManager()
+
     carousel(items=sliders, controls=False, container_height=200)
     st.header(":material/social_leaderboard: Ranking del TOP 20")
     st.write("¡Las 20 personas con mejor equilibrio al cerrar los ojos!")
 
-    st.dataframe(
-        data=generateDataframe(),
-        use_container_width=True,
-        column_config={
-            "Equilibrio": st.column_config.AreaChartColumn(
-                "Trayectoria del centro de presiones", y_min=-3, y_max=3
-            ),
-        },
-    )
+    df = st.session_state.data_mngr.getScoreboard()
+
+    if not df.empty:
+        st.dataframe(
+            data=df,
+            use_container_width=True,
+            column_config={
+                "name": st.column_config.TextColumn("Nombre"),
+                "cop": st.column_config.AreaChartColumn(
+                    "Trayectoria del centro de presiones", y_min=-30, y_max=30
+                ),
+                "area": st.column_config.NumberColumn(
+                    "Área elipse (cm2)", format="%.2f"
+                ),
+                "score": st.column_config.NumberColumn("Puntuación", format="%d"),
+            },
+            height=740,
+        )

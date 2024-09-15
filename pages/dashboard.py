@@ -4,7 +4,6 @@ import yaml
 import time
 import random
 
-from src.managers import DataManager
 from src.handlers import SensorGroup
 
 from pages import ranking
@@ -112,9 +111,6 @@ def getData() -> pd.DataFrame:
 
 
 def dashboard():
-    # Managers
-    if "data_mngr" not in st.session_state:
-        st.session_state.data_mngr = DataManager()
     # Dashboard variables
     if "recording" not in st.session_state:
         st.session_state.recording = False
@@ -125,7 +121,10 @@ def dashboard():
 
     # Page
     if st.session_state.get("btn_save", False):
-        # TODO Merge data to ranked dataframe and backup csv file.
+        # Merge data to ranked dataframe and backup csv file.
+        st.session_state.data_mngr.updateScoreboard(
+            st.session_state.results["dataframe"]
+        )
         # Reset states
         st.session_state.recording = False
         # Switch to ranking page
@@ -150,8 +149,8 @@ def dashboard():
         metric_col1.metric(
             "Posición ranking", f"Puesto nº {position}", f"De {total} personas", "off"
         )
-        metric_col2.metric("Área total trayectoria", f"{round(area, 2)} cm2")
-        metric_col3.metric("Puntuación", f"{round(score, 1)}", f"Máximo 1000.0", "off")
+        metric_col2.metric("Área total trayectoria", f"{area:.2f} cm2")
+        metric_col3.metric("Puntuación", f"{round(score):d}", f"Máximo 1000", "off")
 
         achievements = getAchievements(position, total, area)
         if achievements:
@@ -166,13 +165,25 @@ def dashboard():
 
         # Save options
         df_editor = st.data_editor(
-            data=st.session_state.results["dataframe"],
+            data=pd.DataFrame(
+                {
+                    "name": "Tu nombre",
+                    "cop": [st.session_state.results["cop"]],
+                    "area": area,
+                    "score": score,
+                }
+            ),
             use_container_width=True,
-            disabled=("Trayectoria", "Área elipse (cm2)", "Puntuación"),
+            disabled=("cop", "area", "score"),
             column_config={
-                "Trayectoria": st.column_config.AreaChartColumn(
+                "name": st.column_config.TextColumn("Nombre"),
+                "cop": st.column_config.AreaChartColumn(
                     "Trayectoria del centro de presiones", y_min=-30, y_max=30
                 ),
+                "area": st.column_config.NumberColumn(
+                    "Área elipse (cm2)", format="%.2f"
+                ),
+                "score": st.column_config.NumberColumn("Puntuación", format="%d"),
             },
             hide_index=True,
         )
