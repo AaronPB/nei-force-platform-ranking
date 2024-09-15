@@ -2,6 +2,11 @@
 
 import numpy as np
 import pandas as pd
+
+from plotly.subplots import make_subplots
+import plotly.express as px
+import plotly.graph_objs as go
+
 from src.managers.sensorManager import SensorManager
 from src.handlers import SensorGroup, Sensor
 from src.enums.sensorTypes import STypes
@@ -12,187 +17,234 @@ from loguru import logger
 
 class DataManager:
     def __init__(self):
-        # Time
-        self.timestamp_list: list = []
-        self.timeincr_list: list = []
-        # Data
-        self.df_raw: pd.DataFrame = pd.DataFrame()
-        self.df_calibrated: pd.DataFrame = pd.DataFrame()
-        self.df_filtered: pd.DataFrame = pd.DataFrame()
-        # Sensor header suffixes
-        self.imu_ang_headers: list[str] = ["qx", "qy", "qz", "qw"]
-        self.imu_vel_headers: list[str] = ["wx", "wy", "wz"]
-        self.imu_acc_headers: list[str] = ["x_acc", "y_acc", "z_acc"]
-        # WIP Platform loadcell sensors orientation
-        self.forces_sign: dict[str, int] = {
-            "X_1": 1,
-            "X_2": -1,
-            "X_3": -1,
-            "X_4": 1,
-            "Y_1": 1,
-            "Y_2": 1,
-            "Y_3": -1,
-            "Y_4": -1,
-            "Z_1": 1,
-            "Z_2": 1,
-            "Z_3": 1,
-            "Z_4": 1,
-        }
-
-    def clearDataFrames(self) -> None:
-        self.df_raw: pd.DataFrame = pd.DataFrame()
-        self.df_calibrated: pd.DataFrame = pd.DataFrame()
-        self.df_filtered: pd.DataFrame = pd.DataFrame()
+        self.df_calibrated = pd.DataFrame()
+        self.df_scoreboard = pd.DataFrame(columns=["name", "cop", "area"])
+        self.df_scoreboard_sorted = pd.DataFrame(columns=["name", "cop", "area"])
+        # Plotly figure
+        self.plotly_fig = COPFigure()
 
     # Data load methods
 
-    def loadData(self, time_list: list, sensor_groups: list[SensorGroup]) -> None:
-        self.clearDataFrames()
-        self.timestamp_list = time_list
-        self.timeincr_list = [(t - time_list[0]) / 1000 for t in time_list]
+    def loadData(self, sensor_groups: list[SensorGroup]) -> None:
+        self.df_calibrated = pd.DataFrame()
         for group in sensor_groups:
-            if not group.getRead():
-                continue
-            if group.getStatus() == SGStatus.ERROR:
-                continue
-            for sensor in group.getSensors(only_available=True).values():
-                self.df_raw[sensor.getName()] = sensor.getValues()
+            for sensor in group.getSensors().values():
                 slope = sensor.getSlope()
                 intercept = sensor.getIntercept()
                 self.df_calibrated[sensor.getName()] = [
                     value * slope + intercept for value in sensor.getValues()
                 ]
+        self.plotly_fig.updateData(self.df_calibrated)
 
-    def isRangedPlot(self, idx1: int, idx2: int) -> bool:
-        if idx1 != 0 or idx2 != 0:
-            if idx2 > idx1 and idx1 >= 0 and idx2 <= len(self.df_filtered):
-                return True
-        return False
+    def updateScoreboard(self) -> None:
+        if df is None:
+            # Add results to scoreboard and save backup file
+            df = self.df_scoreboard.copy(deep=True)
+            self.df_scoreboard_sorted = df.sort_values(by="area", ascending=False)
 
     # Getters
 
-    def getDataSize(self) -> int:
-        return len(self.df_raw)
+    def getFigure(self) -> go.Figure:
+        return self.plotly_fig.getFigure()
 
-    def getRawDataframe(self, idx1: int = 0, idx2: int = 0) -> pd.DataFrame:
-        return self.formatDataframe(self.df_raw.copy(deep=True), idx1, idx2)
+    def getResults(self) -> dict:
+        areas = self.plotly_fig.getAreas()
+        cops = self.plotly_fig.getCOPs()
+        cops_array = np.array(cops)
+        # Operate
+        area = sum(areas)
+        total_cop = np.sum(cops_array, axis=0)
+        position = (
+            np.searchsorted(self.df_scoreboard_sorted["area"].values, sum(areas)) + 1
+        )
+        total = len(self.df_scoreboard) + 1
 
-    def getCalibrateDataframe(self, idx1: int = 0, idx2: int = 0) -> pd.DataFrame:
-        return self.formatDataframe(self.df_calibrated.copy(deep=True), idx1, idx2)
+        df = pd.DataFrame(
+            {"Nombre": "Tu Nombre", "Trayectoria": [total_cop], "Área": area},
+            index=["0"],
+        )
+        return {
+            "area": area,
+            "cop": total_cop,
+            "position": position,
+            "total": total,
+            "dataframe": df,
+        }
+
+    def getScoreboard(self) -> pd.DataFrame:
+        return self.df_scoreboard_sorted
 
     def formatDataframe(
         self, df: pd.DataFrame, idx1: int = 0, idx2: int = 0
     ) -> pd.DataFrame:
-        timestamp = self.timestamp_list.copy()
-        if self.isRangedPlot(idx1, idx2):
-            timestamp = timestamp[idx1:idx2]
-            df = df.iloc[idx1:idx2]
         # Format dataframe values to 0.000000e+00
         df = df.map("{:.6e}".format)
-        # Add timestamp values
-        df.insert(0, "timestamp", timestamp)
         return df
 
-    # Data process methods
 
-    # - Sensor methods
-    def getForce(self, sensor_name: str, sign: int) -> pd.DataFrame:
-        df = self.df_filtered[sensor_name].copy(deep=True)
-        df *= sign
-        return df
+class COPFigure:
+    def __init__(self) -> None:
+        self.figure = make_subplots(
+            rows=1,
+            cols=2,
+            shared_xaxes=True,
+            shared_yaxes=True,
+            specs=[[{"type": "xy"}, {"type": "xy"}]],
+        )
+        self.buildSubplots()
+        self.df: pd.DataFrame = None
+        self.area1: float = 0
+        self.area2: float = 0
 
-    # - Platform group methods
+    def buildSubplots(self) -> None:
+        x_range = [-200, 200]
+        y_range = [-300, 300]
+        square_trace = go.Scatter(
+            x=[x_range[0], x_range[1], x_range[1], x_range[0], x_range[0]],
+            y=[y_range[0], y_range[0], y_range[1], y_range[1], y_range[0]],
+            mode="lines",
+            line=dict(color="blue", width=2),
+            fill="toself",
+            fillcolor="rgba(0,0,255,0.1)",
+            name="Platform",
+            showlegend=False,
+        )
+        default_ellipse_trace = go.Scatter(
+            x=[0],
+            y=[0],
+            mode="lines",
+            line=dict(color="Red"),
+            fill="toself",
+            fillcolor="rgba(255,0,0,0.3)",
+            name="LMS ellipse",
+            showlegend=False,
+        )
+        default_cop_trace = go.Scatter(
+            x=[0],
+            y=[0],
+            mode="lines",
+            line=dict(color="MediumPurple"),
+            name="COP",
+            showlegend=False,
+        )
+        default_ellipse_text_trace = go.Scatter(
+            x=[0],
+            y=[0],
+            mode="text",
+            name="COP area",
+            text=["Area"],
+            textposition="middle center",
+            textfont=dict(size=14, color="White"),
+            showlegend=False,
+        )
+        # self.figure.add_trace(square_trace, row=1, col=1)
+        # self.figure.add_trace(square_trace, row=1, col=2)
+        self.figure.add_trace(default_cop_trace, row=1, col=1)
+        self.figure.add_trace(default_cop_trace, row=1, col=2)
+        self.figure.add_trace(default_ellipse_trace, row=1, col=1)
+        self.figure.add_trace(default_ellipse_trace, row=1, col=2)
+        self.figure.add_trace(default_ellipse_text_trace, row=1, col=1)
+        self.figure.add_trace(default_ellipse_text_trace, row=1, col=2)
 
-    # Expected input format: name_1, name_2, name_3, name_4
-    # Output: x1, x2, x3, x4
-    def getPlatformForces(self, sensor_names: list[str]) -> pd.DataFrame:
-        df_list: list[pd.DataFrame] = []
-        for sensor_name in sensor_names:
-            sign = 1
-            for key in self.forces_sign.keys():
-                if key in sensor_name:
-                    sign = self.forces_sign[key]
-                    break
-            df_list.append(self.getForce(sensor_name, sign))
-        return pd.concat(df_list)
+    def getFigure(self) -> go.Figure:
+        self.figure.update_layout(
+            title="Trayectorias de los centros de presiones",
+            xaxis_title="Desplazamiento Medio-Lateral (mm)",
+            yaxis_title="Desplazamiento Anterior-Posterior (mm)",
+            xaxis2_title="Desplazamiento Medio-Lateral (mm)",
+            # xaxis_range=[-200, 200],
+            # yaxis_range=[-300, 300],
+            # xaxis2_range=[-200, 200],
+            # yaxis2_range=[-300, 300],
+        )
+        self.figure.update_annotations()
+        return self.figure
 
-    def getPlatformCOP(
-        self, df_fx: pd.DataFrame, df_fy: pd.DataFrame, df_fz: pd.DataFrame
-    ) -> tuple[pd.Series, pd.Series]:
-        # Platform dimensions
-        lx = 508  # mm
-        ly = 308  # mm
-        h = 20  # mm
-        # Get sum forces
-        fx = df_fx.sum(axis=1)
-        fy = df_fy.sum(axis=1)
-        fz = df_fz.sum(axis=1)
-        # Operate
+    def getAreas(self) -> list[float]:
+        return [self.area1, self.area2]
+
+    def getCOPs(self) -> list[np.array]:
+        return [self.copx1, self.copy1, self.copx2, self.copy2]
+
+    def updateData(self, df: pd.DataFrame) -> None:
+        self.df = df
+        self.copx1, self.copy1 = self.getCOP(
+            self.df.iloc[:, 4:8].values,
+            self.df.iloc[:, 8:12].values,
+            self.df.iloc[:, 0:4].values,
+        )
+        offset = 12
+        self.copx2, self.copy2 = self.getCOP(
+            self.df.iloc[:, 4 + offset : 8 + offset].values,
+            self.df.iloc[:, 8 + offset : 12 + offset].values,
+            self.df.iloc[:, 0 + offset : 4 + offset].values,
+        )
+        elipsx1, elipsy1, self.area1 = self.getEllipse(self.copx1, self.copy1)
+        elipsx2, elipsy2, self.area2 = self.getEllipse(self.copx2, self.copy2)
+        self.figure.update_traces(
+            x=self.copy1, y=self.copx1, selector=dict(name="COP"), col=2
+        )
+        self.figure.update_traces(
+            x=self.copy2, y=self.copx2, selector=dict(name="COP"), col=1
+        )
+        self.figure.update_traces(
+            x=elipsy1, y=elipsx1, selector=dict(name="LMS ellipse"), col=2
+        )
+        self.figure.update_traces(
+            x=elipsy2, y=elipsx2, selector=dict(name="LMS ellipse"), col=1
+        )
+        self.figure.update_traces(
+            text=[f"Área: {self.area1:.2f} mm2"], selector=dict(name="COP area"), col=2
+        )
+        self.figure.update_traces(
+            text=[f"Área: {self.area2:.2f} mm2"], selector=dict(name="COP area"), col=1
+        )
+
+    def getCOP(
+        self, forces_x: np.array, forces_y: np.array, forces_z: np.array
+    ) -> tuple[np.array, np.array]:
+        lx, ly, h = 508, 308, 20
         mx = (
             ly
             / 2
-            * (
-                -df_fz.iloc[:, 0]
-                - df_fz.iloc[:, 1]
-                + df_fz.iloc[:, 2]
-                + df_fz.iloc[:, 3]
-            )
+            * (-forces_z[:, 3] + forces_z[:, 0] + forces_z[:, 1] - forces_z[:, 2])
         )
         my = (
             lx
             / 2
-            * (
-                -df_fz.iloc[:, 0]
-                + df_fz.iloc[:, 1]
-                + df_fz.iloc[:, 2]
-                - df_fz.iloc[:, 3]
-            )
+            * (-forces_z[:, 3] + forces_z[:, 0] + forces_z[:, 1] + forces_z[:, 2])
         )
-        # Get COP
-        cop_x = (-h * fx - my) / fz
-        cop_y = (-h * fy + mx) / fz
-        cop_x = cop_x - np.mean(cop_x)
-        cop_y = cop_y - np.mean(cop_y)
-        return [cop_x, cop_y]
+        xsum = forces_x[:, 1] + forces_x[:, 2] - forces_x[:, 0] - forces_x[:, 3]
+        ysum = forces_y[:, 2] + forces_y[:, 3] - forces_y[:, 0] - forces_y[:, 1]
+        zsum = np.sum(forces_z, axis=1)
+        copx = (-h * xsum - my) / zsum
+        copy = (-h * ysum + mx) / zsum
+        copxmean = copx - np.mean(copx)
+        copymean = copy - np.mean(copy)
+        return copxmean, copymean
 
-    def getEllipseFromCOP(
-        self, cop: tuple[pd.Series, pd.Series]
-    ) -> tuple[float, float, float, float]:
-
-        cov_matrix = np.cov(cop[0], cop[1])
-
-        # Eigen vectors and angular rotation
+    def getEllipse(
+        self, copx: np.array, copy: np.array
+    ) -> tuple[np.array, np.array, float]:
+        cov_matrix = np.cov(copx, copy)
         D, V = np.linalg.eig(cov_matrix)
+
+        # Ellipse rotation angle
         theta = np.arctan2(V[1, 0], V[0, 0])
 
-        ellipse_axis = np.sqrt(D)
+        # Ellipse semi-axis
+        semi_axis = np.sqrt(D)
 
         # Ellipse params
-        a = ellipse_axis[0]
-        b = ellipse_axis[1]
-        area = np.pi * a * b
+        a = semi_axis[0]
+        b = semi_axis[1]
+        area = np.pi * a * b / 100  # In cm2
+        x0 = np.mean(copx)
+        y0 = np.mean(copy)
 
-        return a, b, theta, area
+        # Ellipse coords
+        phi = np.linspace(0, 2 * np.pi, 100)
+        x = x0 + a * np.cos(phi) * np.cos(theta) - b * np.sin(phi) * np.sin(theta)
+        y = y0 + a * np.cos(phi) * np.sin(theta) + b * np.sin(phi) * np.cos(theta)
 
-    # Tare sensors
-
-    def tareSensors(self, sensor_manager: SensorManager, last_values: int) -> None:
-        for group in sensor_manager.getGroups(only_available=True):
-            for sensor in group.getSensors(only_available=True).values():
-                # Only tare loadcells and encoders
-                if sensor.getType() not in [
-                    STypes.SENSOR_LOADCELL,
-                    STypes.SENSOR_ENCODER,
-                ]:
-                    continue
-                # Tare process
-                logger.debug(f"Tare sensor {sensor.getName()}")
-                slope = sensor.getSlope()
-                intercept = sensor.getIntercept()
-                calib_values = [
-                    value * slope + intercept
-                    for value in sensor.getValues()[-last_values:]
-                ]
-                new_intercept = float(sensor.getIntercept() - np.mean(calib_values))
-                logger.debug(f"From {intercept} to {new_intercept}")
-                sensor_manager.setSensorIntercept(sensor, new_intercept)
+        return x, y, area
