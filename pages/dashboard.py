@@ -145,11 +145,13 @@ def dashboard():
         position = st.session_state.results["position"]
         total = st.session_state.results["total"]
         area = st.session_state.results["area"]
-        metric_col1, metric_col2 = st.columns(2)
+        score = st.session_state.results["score"]
+        metric_col1, metric_col2, metric_col3 = st.columns(3)
         metric_col1.metric(
             "Posición ranking", f"Puesto nº {position}", f"De {total} personas", "off"
         )
         metric_col2.metric("Área total trayectoria", f"{round(area, 2)} cm2")
+        metric_col3.metric("Puntuación", f"{round(score, 1)}", f"Máximo 1000.0", "off")
 
         achievements = getAchievements(position, total, area)
         if achievements:
@@ -163,10 +165,10 @@ def dashboard():
         st.plotly_chart(st.session_state.data_mngr.getFigure())
 
         # Save options
-        st.data_editor(
+        df_editor = st.data_editor(
             data=st.session_state.results["dataframe"],
             use_container_width=True,
-            disabled=("Trayectoria", "Área"),
+            disabled=("Trayectoria", "Área elipse (cm2)", "Puntuación"),
             column_config={
                 "Trayectoria": st.column_config.AreaChartColumn(
                     "Trayectoria del centro de presiones", y_min=-30, y_max=30
@@ -174,6 +176,8 @@ def dashboard():
             },
             hide_index=True,
         )
+        if df_editor is not None:
+            st.session_state.results["dataframe"] = df_editor
         col1, col2 = st.columns(2)
         col1.button(
             label="Guardar", key="btn_save", type="primary", use_container_width=True

@@ -52,20 +52,33 @@ class DataManager:
         cops = self.plotly_fig.getCOPs()
         cops_array = np.array(cops)
         # Operate
+        area_min = 0
+        area_max = 10
+        score_min = 500
+        score_max = 1000
         area = sum(areas)
         total_cop = np.sum(cops_array, axis=0)
         position = (
             np.searchsorted(self.df_scoreboard_sorted["area"].values, sum(areas)) + 1
         )
         total = len(self.df_scoreboard) + 1
+        value = np.clip(area, area_min, area_max)
+        scale = (area_max - area) / area_max
+        a = 2
+        score = score_min + (score_max - score_min) * (a**scale - 1) / (a - 1)
 
         df = pd.DataFrame(
-            {"Nombre": "Tu Nombre", "Trayectoria": [total_cop], "Área": area},
+            {
+                "Nombre": "Tu Nombre",
+                "Trayectoria": [total_cop],
+                "Área elipse (cm2)": area,
+                "Puntuación": score,
+            },
             index=["0"],
         )
         return {
             "area": area,
-            "cop": total_cop,
+            "score": score,
             "position": position,
             "total": total,
             "dataframe": df,
@@ -194,10 +207,10 @@ class COPFigure:
             x=elipsy2, y=elipsx2, selector=dict(name="LMS ellipse"), col=1
         )
         self.figure.update_traces(
-            text=[f"Área: {self.area1:.2f} mm2"], selector=dict(name="COP area"), col=2
+            text=[f"Área: {self.area1:.2f} cm2"], selector=dict(name="COP area"), col=2
         )
         self.figure.update_traces(
-            text=[f"Área: {self.area2:.2f} mm2"], selector=dict(name="COP area"), col=1
+            text=[f"Área: {self.area2:.2f} cm2"], selector=dict(name="COP area"), col=1
         )
 
     def getCOP(
