@@ -51,9 +51,9 @@ def main():
     if "demo_enabled" not in st.session_state:
         st.session_state.demo_enabled = False
 
-    if st.session_state.get("toggle_demo", False):
+    if st.session_state.get("enable_demo", False):
         st.session_state.demo_enabled = True
-    else:
+    elif st.session_state.get("disable_demo", False):
         st.session_state.demo_enabled = False
 
     btn_connect_sensors = st.sidebar.button(
@@ -98,10 +98,10 @@ def main():
     if st.session_state.demo_enabled:
         st.sidebar.success("Modo demo activo.", icon=":material/build_circle:")
     st.sidebar.divider()
-    st.sidebar.toggle(
-        label="Activar demo",
-        key="toggle_demo",
-    )
+    if st.session_state.demo_enabled:
+        st.sidebar.button(label="Desactivar demo", key="disable_demo", use_container_width=True)
+    else:
+        st.sidebar.button(label="Activar demo", key="enable_demo", use_container_width=True)
 
 
 if __name__ == "__main__":
