@@ -4,14 +4,11 @@ import time
 from pages import ranking
 
 from loguru import logger
-from src.managers.dataManager import TrajectoryFigure
 
 
 def level_normal():
     if "level_recorded" not in st.session_state:
         st.session_state.level_recorded = False
-    if "level_figure" not in st.session_state:
-        st.session_state.level_figure = TrajectoryFigure(10)
     if "get_balloons" not in st.session_state:
         st.session_state.get_balloons = False
 
@@ -35,14 +32,14 @@ def level_normal():
 
     if st.session_state.level_recorded:
         # TODO Generate results
-        figure.plotly_chart(st.session_state.level_figure.getCompleteFigure())
+        figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
         col1, col2 = st.columns(2)
         col1.button(
             label="Guardar", key="btn_save", type="primary", use_container_width=True
         )
         col2.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
         return
-    
+
     btn_return = st.button(
         label="Volver",
         use_container_width=True,
@@ -59,9 +56,9 @@ def level_normal():
     )
     btn_col2.button("Regenerar", use_container_width=True)
 
-    st.session_state.level_figure = TrajectoryFigure(10)
+    st.session_state.data_mngr.reloadFigure()
 
-    figure.plotly_chart(st.session_state.level_figure.getCompleteFigure())
+    figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
 
     if btn_start:
         test_btns.empty()
@@ -80,7 +77,7 @@ def level_normal():
                 formatted_time = f"{int(seconds):02}.{int(time_index % 20)}"
                 timer_time.title(formatted_time)
                 figure.plotly_chart(
-                    st.session_state.level_figure.getFigure(i, player_x)
+                    st.session_state.data_mngr.getFramedFigure(i, player_x)
                 )
                 time.sleep(0.05)
             timer_title.title("Concentración")
@@ -90,14 +87,14 @@ def level_normal():
                 formatted_time = f"{int(seconds):02}.{int(time_index % 20)}"
                 timer_time.title(formatted_time)
                 figure.plotly_chart(
-                    st.session_state.level_figure.getFigure(i + 60, player_x)
+                    st.session_state.data_mngr.getFramedFigure(i + 60, player_x)
                 )
                 time.sleep(0.05)
             timer_title.title("¡Finalizado!")
             timer_time.empty()
             for i in range(40):
                 figure.plotly_chart(
-                    st.session_state.level_figure.getFigure(
+                    st.session_state.data_mngr.getFramedFigure(
                         i + 60 + path_length, player_x
                     )
                 )

@@ -20,8 +20,6 @@ def ranking():
 
     carousel(items=sliders, controls=False, container_height=200)
 
-    df = st.session_state.data_mngr.getScoreboard()
-
     col1, col2 = st.columns(2)
 
     col1.header(
@@ -60,29 +58,25 @@ def ranking():
     if btn_level_hard:
         st.switch_page(st.Page(level_hard.level_hard))
 
-    if not df.empty:
+    df_normal = st.session_state.data_mngr.getScoreboardNormal()
+    df_hard = st.session_state.data_mngr.getScoreboardNormal()
+
+    if not df_normal.empty:
         col1.dataframe(
-            data=df.iloc[0:10, :],
+            data=df_normal.iloc[0:20, :],
             use_container_width=True,
             column_config={
                 "name": st.column_config.TextColumn("Nombre"),
-                "cop": st.column_config.AreaChartColumn(
-                    "Trayectoria", y_min=-30, y_max=30
-                ),
-                "area": st.column_config.NumberColumn("Área (cm2)", format="%.2f"),
                 "score": st.column_config.NumberColumn("Puntuación", format="%d"),
             },
             height=740,
         )
+    if not df_hard.empty:
         col2.dataframe(
-            data=df.iloc[10:20, :],
+            data=df_hard.iloc[0:20, :],
             use_container_width=True,
             column_config={
                 "name": st.column_config.TextColumn("Nombre"),
-                "cop": st.column_config.AreaChartColumn(
-                    "Trayectoria", y_min=-30, y_max=30
-                ),
-                "area": st.column_config.NumberColumn("Área (cm2)", format="%.2f"),
                 "score": st.column_config.NumberColumn("Puntuación", format="%d"),
             },
             height=740,
