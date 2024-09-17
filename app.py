@@ -88,12 +88,12 @@ def main():
                 "Conecta las plataformas.",
                 icon=":material/error:",
             )
-        elif connected_sensor < 24:
+        elif connected_sensor < 8:
             st.sidebar.warning(
-                f"{connected_sensor} de 24 sensores conectados.",
+                f"{connected_sensor} de 8 sensores conectados.",
                 icon=":material/change_circle:",
             )
-        elif connected_sensor == 24:
+        elif connected_sensor == 8:
             st.sidebar.success(
                 "Plataformas conectadas.",
                 icon=":material/check_circle:",
@@ -104,9 +104,13 @@ def main():
         st.sidebar.success("Modo demo activo.", icon=":material/build_circle:")
     st.sidebar.divider()
     if st.session_state.demo_enabled:
-        st.sidebar.button(label="Desactivar demo", key="disable_demo", use_container_width=True)
+        st.sidebar.button(
+            label="Desactivar demo", key="disable_demo", use_container_width=True
+        )
     else:
-        st.sidebar.button(label="Activar demo", key="enable_demo", use_container_width=True)
+        st.sidebar.button(
+            label="Activar demo", key="enable_demo", use_container_width=True
+        )
 
 
 if __name__ == "__main__":
