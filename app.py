@@ -1,6 +1,6 @@
 import streamlit as st
 
-from pages import ranking, dashboard
+from pages import ranking, level_normal, level_hard
 from src.managers import ConfigManager, SensorManager, TestManager
 
 
@@ -27,9 +27,14 @@ def main():
                 icon=":material/star:",
             ),
             st.Page(
-                dashboard.dashboard,
-                title="Panel",
-                icon=":material/table_chart_view:",
+                level_normal.level_normal,
+                title="Modo carretera",
+                icon=":material/directions_car:",
+            ),
+            st.Page(
+                level_hard.level_hard,
+                title="Modo derrapes",
+                icon=":material/car_crash:",
             ),
         ]
     )
