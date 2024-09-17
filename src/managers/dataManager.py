@@ -7,7 +7,7 @@ import os
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 
-from src.handlers import SensorGroup
+from src.handlers import SensorGroup, Sensor
 
 from loguru import logger
 
@@ -17,6 +17,16 @@ class DataManager:
         self.df_calibrated = pd.DataFrame()
         self.df_scoreboard_normal = pd.DataFrame(columns=["name", "score"])
         self.df_scoreboard_hard = pd.DataFrame(columns=["name", "score"])
+
+        # Platform variables
+        self.platform_left = list[Sensor]
+        self.platform_left_m = np.array([])
+        self.platform_left_b = np.array([])
+        self.platform_right = list[Sensor]
+        self.platform_right_m = np.array([])
+        self.platform_right_b = np.array([])
+        self.force_mean_left = 0
+        self.force_mean_right = 0
 
         # Load saved dataframe
         self.file_path_normal = os.path.join(
@@ -37,16 +47,27 @@ class DataManager:
     def reloadFigure(self, path_objectives: int = 10) -> None:
         self.plotly_fig = TrajectoryFigure(path_objectives)
 
-    def loadData(self, sensor_groups: list[SensorGroup]) -> None:
-        self.df_calibrated = pd.DataFrame()
-        for group in sensor_groups:
-            for sensor in group.getSensors().values():
-                slope = sensor.getSlope()
-                intercept = sensor.getIntercept()
-                self.df_calibrated[sensor.getName()] = [
-                    value * slope + intercept for value in sensor.getValues()
-                ]
-        self.plotly_fig.updateData(self.df_calibrated)
+    def setupSensorGroups(
+        self,
+        platform_left: SensorGroup,
+        platform_right: SensorGroup,
+    ) -> None:
+        m_list = []
+        b_list = []
+        for sensor in platform_left.getSensors(only_available=True).values():
+            self.platform_left.append(sensor)
+            m_list.append(sensor.getSlope())
+            b_list.append(sensor.getIntercept())
+        self.platform_left_m = np.hstack(m_list)
+        self.platform_left_b = np.hstack(b_list)
+        m_list = []
+        b_list = []
+        for sensor in platform_right.getSensors(only_available=True).values():
+            self.platform_right.append(sensor)
+            m_list.append(sensor.getSlope())
+            b_list.append(sensor.getIntercept())
+        self.platform_right_m = np.hstack(m_list)
+        self.platform_right_b = np.hstack(b_list)
 
     def updateScoreboard(self, df: pd.DataFrame = None) -> None:
         pass
@@ -60,40 +81,48 @@ class DataManager:
 
     # Getters
 
-    def getFramedFigure(self, index: int, platform_data: dict) -> go.Figure:
-        # TODO Get user_pose from platform_data
+    def getDemoFramedFigure(self, index: int) -> go.Figure:
         user_pose = 0
+        return self.plotly_fig.getFigure(index, user_pose)
+
+    def getFramedFigure(self, index: int) -> go.Figure:
+        # Get user_pose from platform_data
+        force_left = np.sum(
+            np.array([sensor.getValues()[-1] for sensor in self.platform_left])
+            * self.platform_left_m
+            + self.platform_left_b
+        )
+        force_right = np.sum(
+            np.array([sensor.getValues()[-1] for sensor in self.platform_right])
+            * self.platform_right_m
+            + self.platform_right_b
+        )
+        force_diff = force_right - force_left
+        force_total = force_right + force_left
+        if force_diff >= 0:
+            user_pose = min(5, 5 * (force_diff / force_total))
+        else:
+            user_pose = min(-5, -5 * (abs(force_diff) / force_total))
+
         return self.plotly_fig.getFigure(index, user_pose)
 
     def getCompleteFigure(self) -> go.Figure:
         return self.plotly_fig.getCompleteFigure()
 
-    def getResults(self) -> dict:
-        areas = self.plotly_fig.getAreas()
-        cops = self.plotly_fig.getCOPs()
-        cops_array = np.array(cops)
-        # Operate
-        area_min = 0
-        area_max = 10
-        score_min = 500
+    def getResultsNormal(self) -> dict:
         score_max = 1000
-        area = sum(areas)
-        total_cop = np.sum(cops_array, axis=0).tolist()
-        position = (
-            np.searchsorted(self.df_scoreboard_sorted["area"].values, sum(areas)) + 1
-        )
-        total = len(self.df_scoreboard) + 1
-        value = np.clip(area, area_min, area_max)
-        scale = (area_max - area) / area_max
-        a = 2
-        score = score_min + (score_max - score_min) * (a**scale - 1) / (a - 1)
-        return {
-            "area": area,
-            "score": score,
-            "position": position,
-            "total": total,
-            "cop": total_cop,
-        }
+        score_min = 400
+        df_score = self.getScoreboardNormal()
+
+        # Get score
+        random_path = self.plotly_fig.getRandomPath()
+        user_path = self.plotly_fig.getUserPath()
+        diff_path = np.sum(np.abs(random_path - user_path))
+        score = score_max - ((score_max - score_min) * min(diff_path, 2000) / 2000)
+
+        position = np.searchsorted(df_score["score"].values, score) + 1
+        total = len(df_score) + 1
+        return {"score": score, "position": position, "total": total}
 
     def getScoreboardNormal(self) -> pd.DataFrame:
         df_scores = self.df_scoreboard_normal.copy(deep=True)
@@ -278,3 +307,9 @@ class TrajectoryFigure:
             height=800,
         )
         return self.figure
+
+    def getRandomPath(self):
+        return self.global_path[60 : 60 + len(self.user_path)]
+
+    def getUserPath(self):
+        return self.user_path[60 : 60 + len(self.user_path)]
