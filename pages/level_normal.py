@@ -26,7 +26,7 @@ def level_normal():
 
     st.header(":material/directions_car: Modo carretera", divider="green", anchor=False)
 
-    timer = st.empty()
+    test_info = st.empty()
     figure = st.empty()
     test_btns = st.empty()
 
@@ -62,43 +62,26 @@ def level_normal():
 
     if btn_start:
         test_btns.empty()
-        timer_col1, timer_col2 = timer.columns(2)
-        timer_title = timer_col1.empty()
-        timer_time = timer_col2.empty()
 
         with st.spinner("Ejecutando prueba"):
             # Generate random path
             path_length = 400
-            player_x = 0
-            timer_title.title("¡Prepárate!")
+            test_info.title("Quédate en el centro")
             for i in range(60):
-                time_index = 60 - i
-                seconds = time_index / 20
-                formatted_time = f"{int(seconds):02}.{int(time_index % 20)}"
-                timer_time.title(formatted_time)
-                figure.plotly_chart(
-                    st.session_state.data_mngr.getFramedFigure(i, player_x)
-                )
+                figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(i))
                 time.sleep(0.05)
-            timer_title.title("Concentración")
+            test_info.title("¡Sigue el camino!")
             for i in range(path_length):
-                time_index = path_length - i
-                seconds = time_index / 20
-                formatted_time = f"{int(seconds):02}.{int(time_index % 20)}"
-                timer_time.title(formatted_time)
                 figure.plotly_chart(
-                    st.session_state.data_mngr.getFramedFigure(i + 60, player_x)
+                    st.session_state.data_mngr.getDemoFramedFigure(i + 60)
                 )
                 time.sleep(0.05)
-            timer_title.title("¡Finalizado!")
-            timer_time.empty()
+            test_info.title("¡Completado!")
             for i in range(40):
                 figure.plotly_chart(
-                    st.session_state.data_mngr.getFramedFigure(
-                        i + 60 + path_length, player_x
-                    )
+                    st.session_state.data_mngr.getDemoFramedFigure(i + 60 + path_length)
                 )
                 time.sleep(0.05)
-        timer.empty()
+        test_info.empty()
         st.session_state.level_recorded = True
         st.switch_page(st.Page(level_normal))
