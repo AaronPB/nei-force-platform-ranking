@@ -38,8 +38,32 @@ def getAchievements(position: int, total: int) -> dict:
     return achievements
 
 
-def startTest(test_info, figure):
-    pass
+def startTest(test_info, figure, fps, path_length, start_length, finish_length):
+    sleep_time = 1 / fps
+    st.session_state.data_mngr.setupSensorGroups(
+        st.session_state.sensor_mngr.getGroup("Platform 1"),
+        st.session_state.sensor_mngr.getGroup("Platform 2"),
+    )
+    st.session_state.test_mngr.testStart()
+    with st.spinner("Ejecutando prueba"):
+        test_info.title("Quédate en el centro")
+        for i in range(start_length):
+            st.session_state.test_mngr.testRegisterValues()
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(i))
+            time.sleep(sleep_time)
+        test_info.title("¡Sigue el camino!")
+        for i in range(path_length):
+            idx = i + start_length
+            st.session_state.test_mngr.testRegisterValues()
+            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(idx))
+            time.sleep(sleep_time)
+        test_info.title("¡Completado!")
+        for i in range(finish_length - fps):
+            idx = i + start_length + path_length
+            st.session_state.test_mngr.testRegisterValues()
+            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(idx))
+            time.sleep(sleep_time)
+    st.session_state.test_mngr.testStop()
 
 
 def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
@@ -178,7 +202,7 @@ def level_normal():
         test_btns.empty()
         if not st.session_state.demo_enabled:
             logger.info("Starting platform record!")
-            startTest(test_info, figure)
+            startTest(test_info, figure, fps, path_length, start_length, finish_length)
         else:
             logger.info("Starting demo!")
             startDemo(test_info, figure, fps, path_length, start_length, finish_length)
