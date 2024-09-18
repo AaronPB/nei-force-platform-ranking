@@ -66,8 +66,8 @@ def ranking():
             data=df_normal.iloc[0:20, :],
             use_container_width=True,
             column_config={
-                "name": st.column_config.TextColumn("Nombre"),
-                "score": st.column_config.NumberColumn("Puntuación", format="%d"),
+                "name": st.column_config.TextColumn("Nombre participante"),
+                "score": st.column_config.NumberColumn("Puntos", format="%d"),
             },
             height=740,
         )
@@ -76,8 +76,8 @@ def ranking():
             data=df_hard.iloc[0:20, :],
             use_container_width=True,
             column_config={
-                "name": st.column_config.TextColumn("Nombre"),
-                "score": st.column_config.NumberColumn("Puntuación", format="%d"),
+                "name": st.column_config.TextColumn("Nombre participante"),
+                "score": st.column_config.NumberColumn("Puntos", format="%d"),
             },
             height=740,
         )
