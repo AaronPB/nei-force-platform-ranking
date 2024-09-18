@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-import yaml
 import random
 
 from pages import ranking
@@ -8,32 +7,27 @@ from pages import ranking
 from loguru import logger
 
 
-def loadAchievementsFile(filepath: str) -> dict:
-    with open(filepath, "r", encoding="utf-8") as file:
-        data = yaml.safe_load(file)
-    return data
-
-
-achievements = loadAchievementsFile("files/achievements.yaml")
-achievement_top = achievements["achievement_top"]
-achievement_percentage = achievements["achievement_percentage"]
-
-
 def getAchievements(position: int, total: int) -> dict:
     achievements = {}
     percentage = position / total * 100
 
     # Check achievements for position
-    for key in sorted(achievement_top.keys()):
+    for key in sorted(st.session_state.achievements["achievement_top"].keys()):
         if position <= key:
-            achievements["position"] = achievement_top[key]
+            achievements["position"] = st.session_state.achievements["achievement_top"][
+                key
+            ]
             break
 
     # If not in TOP20, check achievements for percentage
     if not achievements:
-        for key in sorted(achievement_percentage.keys()):
+        for key in sorted(
+            st.session_state.achievements["achievement_percentage"].keys()
+        ):
             if percentage <= key:
-                achievements["percentage"] = achievement_percentage[key]
+                achievements["percentage"] = st.session_state.achievements[
+                    "achievement_percentage"
+                ][key]
                 break
 
     return achievements
@@ -152,7 +146,7 @@ def level_normal():
             "Posición ranking", f"Nº {position}", f"De {total} personas", "off"
         )
         metric_col2.metric(
-            "Puntuación", f"{round(st.session_state.user_score):d}", f"De 1000", "off"
+            "Puntuación", f"{int(st.session_state.user_score):d}", f"De 1000", "off"
         )
 
         achievements = getAchievements(position, total)

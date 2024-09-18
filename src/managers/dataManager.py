@@ -3,8 +3,6 @@
 import numpy as np
 import pandas as pd
 import os
-
-from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 
 from src.handlers import SensorGroup, Sensor

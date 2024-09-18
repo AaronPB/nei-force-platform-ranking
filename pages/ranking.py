@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_carousel import carousel
-import pandas as pd
+import yaml
 
 from src.managers import DataManager
 from pages import level_normal, level_hard
@@ -14,9 +14,12 @@ sliders = [
 
 
 def ranking():
-    # Managers
+    # Load data and achievement managers
     if "data_mngr" not in st.session_state:
         st.session_state.data_mngr = DataManager()
+    if "achievements" not in st.session_state:
+        with open("files/achievements.yaml", "r", encoding="utf-8") as file:
+            st.session_state.achievements = yaml.safe_load(file)
 
     carousel(items=sliders, controls=False, container_height=200)
 
@@ -59,7 +62,7 @@ def ranking():
         st.switch_page(st.Page(level_hard.level_hard))
 
     df_normal = st.session_state.data_mngr.getScoreboardNormal()
-    df_hard = st.session_state.data_mngr.getScoreboardNormal()
+    df_hard = st.session_state.data_mngr.getScoreboardHard()
 
     if not df_normal.empty:
         col1.dataframe(
