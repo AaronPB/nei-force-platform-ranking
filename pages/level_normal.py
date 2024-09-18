@@ -1,9 +1,41 @@
 import streamlit as st
 import time
+import yaml
 
 from pages import ranking
 
 from loguru import logger
+
+
+def loadAchievementsFile(filepath: str) -> dict:
+    with open(filepath, "r", encoding="utf-8") as file:
+        data = yaml.safe_load(file)
+    return data
+
+
+achievements = loadAchievementsFile("files/achievements.yaml")
+achievement_top = achievements["achievement_top"]
+achievement_percentage = achievements["achievement_percentage"]
+
+
+def getAchievements(position: int, total: int) -> dict:
+    achievements = {}
+    percentage = position / total * 100
+
+    # Check achievements for position
+    for key in sorted(achievement_top.keys()):
+        if position <= key:
+            achievements["position"] = achievement_top[key]
+            break
+
+    # If not in TOP20, check achievements for percentage
+    if not achievements:
+        for key in sorted(achievement_percentage.keys()):
+            if percentage <= key:
+                achievements["percentage"] = achievement_percentage[key]
+                break
+
+    return achievements
 
 
 def startTest(test_info, figure):
@@ -58,8 +90,26 @@ def level_normal():
     test_btns = st.empty()
 
     if st.session_state.level_recorded:
-        # TODO Generate results
-        figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
+        # Results and achievements
+        results = st.session_state.data_mngr.getResultsNormal()
+        score = results["score"]
+        position = results["position"]
+        total = results["total"]
+        metric_col1, metric_col2, metric_col3 = st.columns([0.3, 0.2, 0.5])
+        metric_col1.metric(
+            "Posición ranking", f"Nº {position}", f"De {total} personas", "off"
+        )
+        # metric_col2.metric("Área total trayectoria", f"{area:.2f} cm2")
+        metric_col2.metric("Puntuación", f"{round(score):d}", f"De 1000", "off")
+
+        achievements = getAchievements(position, total)
+        if achievements:
+            for achievement in achievements.values():
+                metric_col3.warning(achievement[0], icon=achievement[1])
+        if not st.session_state.get_balloons:
+            st.balloons()
+            st.session_state.get_balloons = True
+        st.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
         col1, col2 = st.columns(2)
         col1.button(
             label="Guardar", key="btn_save", type="primary", use_container_width=True
@@ -67,14 +117,7 @@ def level_normal():
         col2.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
         return
 
-    btn_return = st.button(
-        label="Volver",
-        use_container_width=True,
-    )
-    if btn_return:
-        st.switch_page(st.Page(ranking.ranking))
-
-    btn_col1, btn_col2 = test_btns.columns(2)
+    btn_col1, btn_col2, btn_col3 = test_btns.columns(3)
     btn_start = btn_col1.button(
         label="Iniciar prueba",
         key="btn_start_test",
@@ -84,6 +127,13 @@ def level_normal():
         and not st.session_state.platforms_connected,
     )
     btn_col2.button("Regenerar", use_container_width=True)
+    btn_return = btn_col3.button(
+        label="Volver",
+        use_container_width=True,
+    )
+
+    if btn_return:
+        st.switch_page(st.Page(ranking.ranking))
 
     # Build road path
     path_objectives = 10
@@ -94,9 +144,10 @@ def level_normal():
     path_length = int(duration_secs * fps)
     start_length = int(initial_secs * fps)
     finish_length = int(final_secs * fps)
-    st.session_state.data_mngr.createPath(
-        path_objectives, path_length, start_length, finish_length
-    )
+    if not btn_start:
+        st.session_state.data_mngr.createPath(
+            path_objectives, path_length, start_length, finish_length
+        )
 
     figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
 

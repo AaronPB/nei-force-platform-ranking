@@ -180,16 +180,19 @@ class DataManager:
         df_score = self.getScoreboardNormal()
 
         # Get score
+        logger.debug(f"Random path length: {len(self.random_path)}")
+        logger.debug(f"User path length: {len(self.user_path)}")
         diff_path = np.sum(
             np.abs(
-                self.random_path[self.path_idx_start : self.path_idx_finish]
+                self.random_path
                 - self.user_path[self.path_idx_start : self.path_idx_finish]
             )
         )
-        score = score_max - ((score_max - score_min) * min(diff_path, 2000) / 2000)
+        score = score_max - ((score_max - score_min) * min(diff_path, 600) / 600)
 
-        position = np.searchsorted(df_score["score"].values, score) + 1
+        position = np.searchsorted(np.sort(df_score["score"].values), score)
         total = len(df_score) + 1
+        position = total - position
         return {"score": score, "position": position, "total": total}
 
     def getScoreboardNormal(self) -> pd.DataFrame:

@@ -21,21 +21,7 @@ achievement_top:
     - "**TOP 20** - ¡Has quedado entre los 20 primeros!"
     - ":material/social_leaderboard:"
 
-achievement_area:
-  0:
-    - "**Ni un pelo** - ¡¡Tu equilibrio es perfecto!!"
-    - ":material/trophy:"
-  1:
-    - "**Nervios de acero** - ¡Sólido como un muro!"
-    - ":material/trophy:"
-  2:
-    - "**Sin respiración** - ¡Has mantenido la postura!"
-    - ":material/trophy:"
-  3:
-    - "**Con cuatro sentidos** - ¡No te hace falta la vista para mantener el equilibrio!"
-    - ":material/trophy:"
-
-achievement_area_percentage:
+achievement_percentage:
   10:
     - "**Del gremio de las estatuas** - ¡Estás dentro del **10%** de personas con mejor equilibrio!"
     - ":material/clock_loader_10:"
