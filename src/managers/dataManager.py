@@ -149,6 +149,20 @@ class DataManager:
         )
         self.df_scoreboard_normal.to_csv(self.file_path_normal, index=False)
 
+    def updateScoreboardHard(self, name: str, score: float) -> None:
+        if name in self.df_scoreboard_hard["name"].values:
+            i = 1
+            new_name = f"{name}_{i}"
+            while new_name in self.df_scoreboard_hard["name"].values:
+                i += 1
+                new_name = f"{name}_{i}"
+            name = new_name
+        new_entry = pd.DataFrame({"name": name, "score": score}, index=[0])
+        self.df_scoreboard_hard = pd.concat(
+            [self.df_scoreboard_hard, new_entry], ignore_index=True
+        )
+        self.df_scoreboard_hard.to_csv(self.file_path_hard, index=False)
+
     # Getters
 
     def getDemoFramedFigure(self, index: int, objective: float) -> go.Figure:
@@ -189,8 +203,28 @@ class DataManager:
         df_score = self.getScoreboardNormal()
 
         # Get score
-        logger.debug(f"Random path length: {len(self.random_path)}")
-        logger.debug(f"User path length: {len(self.user_path)}")
+        diff_path = np.sum(
+            np.abs(
+                self.random_path
+                - self.user_path[self.path_idx_start : self.path_idx_finish]
+            )
+        )
+        score = score_max - (
+            (score_max - score_min) * min(diff_path, max_diff) / max_diff
+        )
+
+        position = np.searchsorted(np.sort(df_score["score"].values), score)
+        total = len(df_score) + 1
+        position = total - position
+        return {"score": score, "position": position, "total": total}
+
+    def getResultsHard(self) -> dict:
+        score_max = 1000
+        score_min = 400
+        max_diff = 600 * (self.fps / 20)
+        df_score = self.getScoreboardHard()
+
+        # Get score
         diff_path = np.sum(
             np.abs(
                 self.random_path
