@@ -44,23 +44,26 @@ def startTest(test_info, figure):
 
 def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
+    global_path = st.session_state.data_mngr.global_path
     with st.spinner("Ejecutando prueba"):
         test_info.title("Quédate en el centro")
         for i in range(start_length):
-            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(i))
+            figure.plotly_chart(
+                st.session_state.data_mngr.getDemoFramedFigure(i, global_path[i])
+            )
             time.sleep(sleep_time)
         test_info.title("¡Sigue el camino!")
         for i in range(path_length):
+            idx = i + start_length
             figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(i + start_length)
+                st.session_state.data_mngr.getDemoFramedFigure(idx, global_path[idx])
             )
             time.sleep(sleep_time)
         test_info.title("¡Completado!")
         for i in range(finish_length - fps):
+            idx = i + start_length + path_length
             figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(
-                    i + start_length + path_length
-                )
+                st.session_state.data_mngr.getDemoFramedFigure(idx, global_path[idx])
             )
             time.sleep(sleep_time)
 
@@ -154,7 +157,11 @@ def level_normal():
     finish_length = int(final_secs * fps)
     if not btn_start:
         st.session_state.data_mngr.createPath(
-            path_objectives, path_length, start_length, finish_length, fps,
+            path_objectives,
+            path_length,
+            start_length,
+            finish_length,
+            fps,
         )
 
     figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())

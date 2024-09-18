@@ -29,6 +29,7 @@ class DataManager:
         self.force_mean_right = 0
 
         # Road variables
+        self.global_path = np.array([])
         self.random_path = np.array([])
         self.user_path = np.array([])
         self.path_idx_start = 0
@@ -102,14 +103,14 @@ class DataManager:
         path_segments.append(np.full(interfase_path_length, 0))
 
         self.random_path = np.hstack(path_segments)
-        global_path = np.pad(
+        self.global_path = np.pad(
             self.random_path,
             (start_length, finish_length),
             mode="constant",
             constant_values=0,
         )
         self.plotly_fig = TrajectoryFigure(
-            global_path, self.path_idx_start, self.path_idx_finish, self.fps
+            self.global_path, self.path_idx_start, self.path_idx_finish, self.fps
         )
 
     def setupSensorGroups(
@@ -150,8 +151,8 @@ class DataManager:
 
     # Getters
 
-    def getDemoFramedFigure(self, index: int) -> go.Figure:
-        user_pose = np.random.uniform(-1, 1, 1)
+    def getDemoFramedFigure(self, index: int, objective: float) -> go.Figure:
+        user_pose = np.random.uniform(objective - 0.25, objective + 0.25, 1)
         self.user_path = np.append(self.user_path, user_pose)
         return self.plotly_fig.getFigure(index, user_pose)
 
