@@ -10,24 +10,27 @@ def startTest(test_info, figure):
     pass
 
 
-def startDemo(test_info, figure):
+def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
+    sleep_time = 1 / fps
     with st.spinner("Ejecutando prueba"):
-        # Generate random path
-        path_length = 400
         test_info.title("Quédate en el centro")
-        for i in range(60):
+        for i in range(start_length):
             figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(i))
-            time.sleep(0.05)
+            time.sleep(sleep_time)
         test_info.title("¡Sigue el camino!")
         for i in range(path_length):
-            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(i + 60))
-            time.sleep(0.05)
-        test_info.title("¡Completado!")
-        for i in range(40):
             figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(i + 60 + path_length)
+                st.session_state.data_mngr.getDemoFramedFigure(i + start_length)
             )
-            time.sleep(0.05)
+            time.sleep(sleep_time)
+        test_info.title("¡Completado!")
+        for i in range(finish_length - fps):
+            figure.plotly_chart(
+                st.session_state.data_mngr.getDemoFramedFigure(
+                    i + start_length + path_length
+                )
+            )
+            time.sleep(sleep_time)
 
 
 def level_normal():
@@ -82,7 +85,18 @@ def level_normal():
     )
     btn_col2.button("Regenerar", use_container_width=True)
 
-    st.session_state.data_mngr.reloadFigure()
+    # Build road path
+    path_objectives = 10
+    fps = 20
+    duration_secs = 20
+    initial_secs = 5
+    final_secs = 3
+    path_length = int(duration_secs * fps)
+    start_length = int(initial_secs * fps)
+    finish_length = int(final_secs * fps)
+    st.session_state.data_mngr.createPath(
+        path_objectives, path_length, start_length, finish_length
+    )
 
     figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
 
@@ -101,7 +115,7 @@ def level_normal():
             startTest(test_info, figure)
         else:
             logger.info("Starting demo!")
-            startDemo(test_info, figure)
+            startDemo(test_info, figure, fps, path_length, start_length, finish_length)
 
         test_info.empty()
         st.session_state.level_recorded = True
