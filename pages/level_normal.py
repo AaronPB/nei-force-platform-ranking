@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 import yaml
+import random
 
 from pages import ranking
 
@@ -41,8 +42,9 @@ def getAchievements(position: int, total: int) -> dict:
 def startTest(test_info, figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
     st.session_state.data_mngr.setupSensorGroups(
-        st.session_state.sensor_mngr.getGroup("Platform 1"),
-        st.session_state.sensor_mngr.getGroup("Platform 2"),
+        st.session_state.sensor_mngr.getGroup("platform_1"),
+        st.session_state.sensor_mngr.getGroup("platform_2"),
+        False,
     )
     st.session_state.test_mngr.testStart()
     with st.spinner("Ejecutando prueba"):
@@ -55,13 +57,13 @@ def startTest(test_info, figure, fps, path_length, start_length, finish_length):
         for i in range(path_length):
             idx = i + start_length
             st.session_state.test_mngr.testRegisterValues()
-            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(idx))
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
         test_info.title("¡Completado!")
         for i in range(finish_length - fps):
             idx = i + start_length + path_length
             st.session_state.test_mngr.testRegisterValues()
-            figure.plotly_chart(st.session_state.data_mngr.getDemoFramedFigure(idx))
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
     st.session_state.test_mngr.testStop()
 
@@ -69,26 +71,45 @@ def startTest(test_info, figure, fps, path_length, start_length, finish_length):
 def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
     global_path = st.session_state.data_mngr.global_path
+    st.session_state.data_mngr.setupSensorGroups(
+        st.session_state.sensor_mngr.getGroup("platform_1"),
+        st.session_state.sensor_mngr.getGroup("platform_2"),
+        True,
+    )
+    # Prepare sensor data injection
+    force_total = 800
+    platform_left = []
+    platform_right = []
+    for pose in global_path:
+        pose = random.uniform(pose - 0.25, pose + 0.25)
+        platform_left_values, platform_right_values = (
+            st.session_state.data_mngr.getDemoPlatformForces(pose, force_total)
+        )
+        platform_left.append(platform_left_values)
+        platform_right.append(platform_right_values)
     with st.spinner("Ejecutando prueba"):
         test_info.title("Quédate en el centro")
         for i in range(start_length):
-            figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(i, global_path[i])
+            st.session_state.data_mngr.setDemoPlatformForces(
+                platform_left[i], platform_right[i]
             )
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(i))
             time.sleep(sleep_time)
         test_info.title("¡Sigue el camino!")
         for i in range(path_length):
             idx = i + start_length
-            figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(idx, global_path[idx])
+            st.session_state.data_mngr.setDemoPlatformForces(
+                platform_left[idx], platform_right[idx]
             )
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
         test_info.title("¡Completado!")
         for i in range(finish_length - fps):
             idx = i + start_length + path_length
-            figure.plotly_chart(
-                st.session_state.data_mngr.getDemoFramedFigure(idx, global_path[idx])
+            st.session_state.data_mngr.setDemoPlatformForces(
+                platform_left[idx], platform_right[idx]
             )
+            figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
 
 

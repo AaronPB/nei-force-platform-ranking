@@ -19,10 +19,10 @@ class DataManager:
         self.df_scoreboard_hard = pd.DataFrame(columns=["name", "score"])
 
         # Platform variables
-        self.platform_left = list[Sensor]
+        self.platform_left: list[Sensor] = []
         self.platform_left_m = np.array([])
         self.platform_left_b = np.array([])
-        self.platform_right = list[Sensor]
+        self.platform_right: list[Sensor] = []
         self.platform_right_m = np.array([])
         self.platform_right_b = np.array([])
         self.force_mean_left = 0
@@ -115,12 +115,13 @@ class DataManager:
 
     def setupSensorGroups(
         self,
-        platform_left: SensorGroup,
-        platform_right: SensorGroup,
+        platform_group_left: SensorGroup,
+        platform_group_right: SensorGroup,
+        demo: bool,
     ) -> None:
         m_list = []
         b_list = []
-        for sensor in platform_left.getSensors(only_available=True).values():
+        for sensor in platform_group_left.getSensors(only_available=not demo).values():
             self.platform_left.append(sensor)
             m_list.append(sensor.getSlope())
             b_list.append(sensor.getIntercept())
@@ -128,7 +129,7 @@ class DataManager:
         self.platform_left_b = np.hstack(b_list)
         m_list = []
         b_list = []
-        for sensor in platform_right.getSensors(only_available=True).values():
+        for sensor in platform_group_right.getSensors(only_available=not demo).values():
             self.platform_right.append(sensor)
             m_list.append(sensor.getSlope())
             b_list.append(sensor.getIntercept())
@@ -165,10 +166,28 @@ class DataManager:
 
     # Getters
 
-    def getDemoFramedFigure(self, index: int, objective: float) -> go.Figure:
-        user_pose = np.random.uniform(objective - 0.25, objective + 0.25, 1)
-        self.user_path = np.append(self.user_path, user_pose)
-        return self.plotly_fig.getFigure(index, user_pose)
+    def setDemoPlatformForces(
+        self, platform_left_values: np.ndarray, platform_right_values: np.ndarray
+    ):
+        for sensor, value in zip(self.platform_left, platform_left_values):
+            sensor.values.append(value)
+        for sensor, value in zip(self.platform_right, platform_right_values):
+            sensor.values.append(value)
+
+    def getDemoPlatformForces(self, user_pose: float, force_total: float):
+        force_diff = force_total * (user_pose / 5)
+
+        force_right = (force_diff + force_total) / 2
+        force_left = force_total - force_right
+
+        platform_left_values = (
+            force_left / 4 - self.platform_left_b
+        ) / self.platform_left_m
+        platform_right_values = (
+            force_right / 4 - self.platform_right_b
+        ) / self.platform_right_m
+
+        return platform_left_values, platform_right_values
 
     def getFramedFigure(self, index: int) -> go.Figure:
         # Get user_pose from platform_data
@@ -187,7 +206,7 @@ class DataManager:
         if force_diff >= 0:
             user_pose = min(5, 5 * (force_diff / force_total))
         else:
-            user_pose = min(-5, -5 * (abs(force_diff) / force_total))
+            user_pose = max(-5, -5 * (abs(force_diff) / force_total))
         self.user_path = np.append(self.user_path, [user_pose])
         return self.plotly_fig.getFigure(index, [user_pose])
 
