@@ -70,12 +70,16 @@ def level_normal():
         st.session_state.level_recorded = False
     if "get_balloons" not in st.session_state:
         st.session_state.get_balloons = False
+    if "user_name" not in st.session_state:
+        st.session_state.user_name = "Anónimo"
+    if "user_score" not in st.session_state:
+        st.session_state.user_score = 400
 
     if st.session_state.get("btn_save", False):
         # Merge data to ranked dataframe and backup csv file.
-        # st.session_state.data_mngr.updateScoreboard(
-        #     st.session_state.results["dataframe"]
-        # )
+        st.session_state.data_mngr.updateScoreboardNormal(
+            st.session_state.user_name, st.session_state.user_score
+        )
         # Reset states
         st.session_state.level_recorded = False
         # Switch to ranking page
@@ -92,15 +96,16 @@ def level_normal():
     if st.session_state.level_recorded:
         # Results and achievements
         results = st.session_state.data_mngr.getResultsNormal()
-        score = results["score"]
+        st.session_state.user_score = results["score"]
         position = results["position"]
         total = results["total"]
         metric_col1, metric_col2, metric_col3 = st.columns([0.3, 0.2, 0.5])
         metric_col1.metric(
             "Posición ranking", f"Nº {position}", f"De {total} personas", "off"
         )
-        # metric_col2.metric("Área total trayectoria", f"{area:.2f} cm2")
-        metric_col2.metric("Puntuación", f"{round(score):d}", f"De 1000", "off")
+        metric_col2.metric(
+            "Puntuación", f"{round(st.session_state.user_score):d}", f"De 1000", "off"
+        )
 
         achievements = getAchievements(position, total)
         if achievements:
@@ -110,11 +115,14 @@ def level_normal():
             st.balloons()
             st.session_state.get_balloons = True
         st.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
-        col1, col2 = st.columns(2)
-        col1.button(
+        col1, col2, col3 = st.columns([0.5, 0.25, 0.25])
+        st.session_state.user_name = col1.text_input(
+            label="Indica tu nombre", label_visibility="collapsed", value="Anónimo"
+        )
+        col2.button(
             label="Guardar", key="btn_save", type="primary", use_container_width=True
         )
-        col2.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
+        col3.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
         return
 
     btn_col1, btn_col2, btn_col3 = test_btns.columns(3)

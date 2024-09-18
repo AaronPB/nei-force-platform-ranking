@@ -131,15 +131,19 @@ class DataManager:
         self.platform_right_m = np.hstack(m_list)
         self.platform_right_b = np.hstack(b_list)
 
-    def updateScoreboard(self, df: pd.DataFrame = None) -> None:
-        pass
-        # if df is not None:
-        #     self.df_scoreboard = pd.concat([self.df_scoreboard, df], ignore_index=True)
-        # df_scores = self.df_scoreboard.copy(deep=True)
-        # self.df_scoreboard_sorted = df_scores.sort_values(by="score", ascending=False)
-        # self.df_scoreboard_sorted = self.df_scoreboard_sorted.reset_index(drop=True)
-        # self.df_scoreboard_sorted.index = self.df_scoreboard_sorted.index + 1
-        # self.df_scoreboard.to_csv(self.file_path, index=False)
+    def updateScoreboardNormal(self, name: str, score: float) -> None:
+        if name in self.df_scoreboard_normal["name"].values:
+            i = 1
+            new_name = f"{name}_{i}"
+            while new_name in self.df_scoreboard_normal["name"].values:
+                i += 1
+                new_name = f"{name}_{i}"
+            name = new_name
+        new_entry = pd.DataFrame({"name": name, "score": score}, index=[0])
+        self.df_scoreboard_normal = pd.concat(
+            [self.df_scoreboard_normal, new_entry], ignore_index=True
+        )
+        self.df_scoreboard_normal.to_csv(self.file_path_normal, index=False)
 
     # Getters
 
@@ -177,6 +181,7 @@ class DataManager:
     def getResultsNormal(self) -> dict:
         score_max = 1000
         score_min = 400
+        max_diff = 600
         df_score = self.getScoreboardNormal()
 
         # Get score
@@ -188,7 +193,9 @@ class DataManager:
                 - self.user_path[self.path_idx_start : self.path_idx_finish]
             )
         )
-        score = score_max - ((score_max - score_min) * min(diff_path, 600) / 600)
+        score = score_max - (
+            (score_max - score_min) * min(diff_path, max_diff) / max_diff
+        )
 
         position = np.searchsorted(np.sort(df_score["score"].values), score)
         total = len(df_score) + 1
