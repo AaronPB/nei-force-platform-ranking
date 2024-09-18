@@ -33,6 +33,7 @@ class DataManager:
         self.user_path = np.array([])
         self.path_idx_start = 0
         self.path_idx_finish = 0
+        self.fps = 20
 
         # Load saved dataframe
         self.file_path_normal = os.path.join(
@@ -56,12 +57,14 @@ class DataManager:
         path_length: int,
         start_length: int,
         finish_length: int,
+        fps: int,
     ) -> None:
         # Clear variables
         self.random_path = np.array([])
         self.user_path = np.array([])
         self.path_idx_start = start_length
         self.path_idx_finish = start_length + path_length
+        self.fps = fps
 
         # Generate random path
         points = [0]
@@ -106,7 +109,7 @@ class DataManager:
             constant_values=0,
         )
         self.plotly_fig = TrajectoryFigure(
-            global_path, self.path_idx_start, self.path_idx_finish
+            global_path, self.path_idx_start, self.path_idx_finish, self.fps
         )
 
     def setupSensorGroups(
@@ -148,7 +151,7 @@ class DataManager:
     # Getters
 
     def getDemoFramedFigure(self, index: int) -> go.Figure:
-        user_pose = 0
+        user_pose = np.random.uniform(-1, 1, 1)
         self.user_path = np.append(self.user_path, user_pose)
         return self.plotly_fig.getFigure(index, user_pose)
 
@@ -170,8 +173,8 @@ class DataManager:
             user_pose = min(5, 5 * (force_diff / force_total))
         else:
             user_pose = min(-5, -5 * (abs(force_diff) / force_total))
-        self.user_path = np.append(self.user_path, user_pose)
-        return self.plotly_fig.getFigure(index, user_pose)
+        self.user_path = np.append(self.user_path, [user_pose])
+        return self.plotly_fig.getFigure(index, [user_pose])
 
     def getCompleteFigure(self) -> go.Figure:
         if len(self.user_path) > 0:
@@ -181,7 +184,7 @@ class DataManager:
     def getResultsNormal(self) -> dict:
         score_max = 1000
         score_min = 400
-        max_diff = 600
+        max_diff = 600 * (self.fps / 20)
         df_score = self.getScoreboardNormal()
 
         # Get score
@@ -219,12 +222,13 @@ class DataManager:
 
 class TrajectoryFigure:
     def __init__(
-        self, random_path: np.ndarray, start_idx: int, finish_idx: int
+        self, random_path: np.ndarray, start_idx: int, finish_idx: int, fps: int
     ) -> None:
         self.figure = go.Figure()
         self.random_path = random_path
         self.start_idx = start_idx
         self.finish_idx = finish_idx
+        self.fps = fps
         self.path_window_length = 10  # Not used
 
         self.buildTraces()
@@ -290,10 +294,8 @@ class TrajectoryFigure:
         )
         self.figure.add_trace(user_pose)
 
-    def getFigure(self, index: int, user_pose: float) -> go.Figure:
-        self.figure.update_traces(
-            x=[user_pose], y=[index], selector=dict(name="Jugador")
-        )
+    def getFigure(self, index: int, user_pose: np.ndarray) -> go.Figure:
+        self.figure.update_traces(x=user_pose, y=[index], selector=dict(name="Jugador"))
         self.figure.update_layout(
             xaxis=dict(
                 range=[-5, 5],
@@ -304,7 +306,7 @@ class TrajectoryFigure:
                 zerolinecolor="yellow",
             ),
             yaxis=dict(
-                range=[index - 1, index + 20],
+                range=[index - 1, index + self.fps],
                 showticklabels=False,
                 showline=False,
             ),
@@ -334,7 +336,7 @@ class TrajectoryFigure:
                 zerolinecolor="yellow",
             ),
             yaxis=dict(
-                range=[0, 600],
+                range=[0, len(self.random_path)],
                 showticklabels=False,
                 showline=False,
                 zeroline=True,

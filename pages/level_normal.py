@@ -154,7 +154,7 @@ def level_normal():
     finish_length = int(final_secs * fps)
     if not btn_start:
         st.session_state.data_mngr.createPath(
-            path_objectives, path_length, start_length, finish_length
+            path_objectives, path_length, start_length, finish_length, fps,
         )
 
     figure.plotly_chart(st.session_state.data_mngr.getCompleteFigure())
