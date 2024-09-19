@@ -136,6 +136,12 @@ class DataManager:
         self.platform_right_m = np.hstack(m_list)
         self.platform_right_b = np.hstack(b_list)
 
+    def clearSensorData(self) -> None:
+        if self.platform_left:
+            [sensor.clearValues() for sensor in self.platform_left]
+        if self.platform_right:
+            [sensor.clearValues() for sensor in self.platform_right]
+
     def updateScoreboardNormal(self, name: str, score: float) -> None:
         if name in self.df_scoreboard_normal["name"].values:
             i = 1

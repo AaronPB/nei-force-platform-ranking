@@ -70,6 +70,7 @@ def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
         st.session_state.sensor_mngr.getGroup("platform_2"),
         True,
     )
+    st.session_state.data_mngr.clearSensorData()
     # Prepare sensor data injection
     force_total = 800
     platform_left = []
