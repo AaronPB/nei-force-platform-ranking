@@ -2,7 +2,7 @@
 
 Se trata de una aplicación interactiva con plataformas de fuerza para la Noche Europea de los Investigadores.
 
-El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster y mostrar una versión práctica del software `force_platform_reader` desarrollado que anime al público a participar.
+El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster, mostrando una versión simplificada e interactiva del software `force_platform_reader` desarrollado.
 
 <p align="center">
   <a href="https://lanochedelosinvestigadores.fundaciondescubre.es/" target="_blank"><img alt="NEI 2024 information" src="images/nei_almeria_2024.jpg"></a>
@@ -15,9 +15,11 @@ La aplicación consiste en un desafío en el que se debe seguir un camino 2D gen
 
 La persona tendrá que mantener un puntero dentro del camino mostrado, inclinando su peso hacia la derecha o izquierda para moverlo. Al final del trayecto, se indica una puntuación según la desviación con respecto a la ruta generada y se clasifica en la tabla correspondiente del desafío.
 
-Se han desarrollado dos modos de dificultad, para animar a los que tienen mayor capacidad de reacción:
+Se han planteado dos modos de dificultad, para animar a los que tienen mayor capacidad de reacción:
 - **Modo carretera**: este sería el modo normal. Se muestra al participante el camino previo y contiene 10 cambios de dirección en 20 segundos.
 - **Modo derrapes**: En este modo no se muestra el camino al participante y contiene 20 cambios de dirección en 20 segundos.
+
+En estos modos existe además la posibilidad de invertir los controles, haciéndolo aún más desafiante. Si se hace el desafío con esta opción, se aplica un multiplicador a la puntuación final como recompensa.
 
 # Instalación
 
@@ -42,7 +44,7 @@ docker build -tag nei-force-platform-ranking .
 Arranca un contenedor con las rutas USB compartidas, para poder acceder a las plataformas conectadas.
 
 > [!NOTE]
-> Debes modificar las rutas locales según el OS.
+> Debes modificar las rutas `/dev` locales según el OS.
 
 ```bash
 docker run --name nei-fp-app -p 8501:8501 --privileged -v /dev:/dev nei-force-platform-ranking
