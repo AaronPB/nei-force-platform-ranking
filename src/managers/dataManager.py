@@ -371,8 +371,7 @@ class TrajectoryFigure:
                 showline=False,
             ),
             showlegend=False,
-            # width=400,
-            # height=400
+            height=800,
         )
         return self.figure
 
