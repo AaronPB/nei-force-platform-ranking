@@ -117,6 +117,8 @@ class DataManager:
         platform_group_right: SensorGroup,
         demo: bool,
     ) -> None:
+        self.platform_left.clear()
+        self.platform_right.clear()
         m_list = []
         b_list = []
         for sensor in platform_group_left.getSensors(only_available=not demo).values():
