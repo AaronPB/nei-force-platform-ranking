@@ -132,8 +132,8 @@ def level_normal():
 
     st.header(":material/directions_car: Modo carretera", divider="green", anchor=False)
 
-    test_info = st.empty()
     figure = st.empty()
+    test_info = st.empty()
     test_btns = st.empty()
 
     if st.session_state.level_recorded:
