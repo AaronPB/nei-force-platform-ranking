@@ -200,7 +200,7 @@ def level_hard():
         col3.button(label="Cancelar", key="btn_rec_cancel", use_container_width=True)
         return
 
-    btn_col1, btn_col2, btn_col3 = test_btns.columns(3)
+    btn_col1, btn_col2 = test_btns.columns(2)
     btn_start = btn_col1.button(
         label="Iniciar prueba",
         key="btn_start_test",
@@ -209,8 +209,7 @@ def level_hard():
         disabled=not st.session_state.demo_enabled
         and not st.session_state.platforms_connected,
     )
-    btn_col2.button("Regenerar", use_container_width=True)
-    btn_return = btn_col3.button(
+    btn_return = btn_col2.button(
         label="Volver",
         use_container_width=True,
     )
