@@ -221,7 +221,7 @@ class DataManager:
             return self.plotly_fig.getCompleteFigure(self.user_path)
         return self.plotly_fig.getCompleteFigure()
 
-    def getResultsNormal(self) -> dict:
+    def getResultsNormal(self, bonus: bool = False) -> dict:
         score_max = 1000
         score_min = 400
         max_diff = 600 * (self.fps / 20)
@@ -237,13 +237,15 @@ class DataManager:
         score = score_max - (
             (score_max - score_min) * min(diff_path, max_diff) / max_diff
         )
+        if bonus:
+            score = score * 1.5
 
         position = np.searchsorted(np.sort(df_score["score"].values), score)
         total = len(df_score) + 1
         position = total - position
         return {"score": score, "position": position, "total": total}
 
-    def getResultsHard(self) -> dict:
+    def getResultsHard(self, bonus: bool = False) -> dict:
         score_max = 1000
         score_min = 400
         max_diff = 600 * (self.fps / 20)
@@ -259,6 +261,8 @@ class DataManager:
         score = score_max - (
             (score_max - score_min) * min(diff_path, max_diff) / max_diff
         )
+        if bonus:
+            score = score * 1.5
 
         position = np.searchsorted(np.sort(df_score["score"].values), score)
         total = len(df_score) + 1

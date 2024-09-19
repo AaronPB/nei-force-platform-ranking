@@ -20,17 +20,17 @@ def ranking():
     if "achievements" not in st.session_state:
         with open("files/achievements.yaml", "r", encoding="utf-8") as file:
             st.session_state.achievements = yaml.safe_load(file)
+    if "inverted_mode" not in st.session_state:
+        st.session_state.inverted_mode = False
 
     carousel(items=sliders, controls=False, container_height=200)
 
     col1, col2 = st.columns(2)
 
     col1.header(
-        ":material/social_leaderboard: Modo carretera", divider="green", anchor=False
+        ":material/directions_car: Modo carretera", divider="green", anchor=False
     )
-    col2.header(
-        ":material/social_leaderboard: Modo derrapes", divider="red", anchor=False
-    )
+    col2.header(":material/car_crash: Modo derrapes", divider="red", anchor=False)
     col1.markdown(
         """
         - Previsión del camino aleatorio
@@ -56,9 +56,29 @@ def ranking():
         type="primary",
         use_container_width=True,
     )
+    btn_level_normal_inverted = col1.button(
+        label="Iniciar desafío espejo",
+        key="btn_test_normal_inverted",
+        type="primary",
+        use_container_width=True,
+    )
+    btn_level_hard_inverted = col2.button(
+        label="Iniciar desafío espejo",
+        key="btn_test_hard_inverted",
+        type="primary",
+        use_container_width=True,
+    )
     if btn_level_normal:
+        st.session_state.inverted_mode = False
         st.switch_page(st.Page(level_normal.level_normal))
     if btn_level_hard:
+        st.session_state.inverted_mode = False
+        st.switch_page(st.Page(level_hard.level_hard))
+    if btn_level_normal_inverted:
+        st.session_state.inverted_mode = True
+        st.switch_page(st.Page(level_normal.level_normal))
+    if btn_level_hard_inverted:
+        st.session_state.inverted_mode = True
         st.switch_page(st.Page(level_hard.level_hard))
 
     df_normal = st.session_state.data_mngr.getScoreboardNormal()
@@ -66,21 +86,21 @@ def ranking():
 
     if not df_normal.empty:
         col1.dataframe(
-            data=df_normal.iloc[0:20, :],
+            data=df_normal.iloc[0:15, :],
             use_container_width=True,
             column_config={
                 "name": st.column_config.TextColumn("Nombre participante"),
                 "score": st.column_config.NumberColumn("Puntos", format="%d"),
             },
-            height=740,
+            height=565,
         )
     if not df_hard.empty:
         col2.dataframe(
-            data=df_hard.iloc[0:20, :],
+            data=df_hard.iloc[0:15, :],
             use_container_width=True,
             column_config={
                 "name": st.column_config.TextColumn("Nombre participante"),
                 "score": st.column_config.NumberColumn("Puntos", format="%d"),
             },
-            height=740,
+            height=565,
         )

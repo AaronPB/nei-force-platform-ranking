@@ -33,13 +33,22 @@ def getAchievements(position: int, total: int) -> dict:
     return achievements
 
 
-def startTest(test_info, figure, fps, path_length, start_length, finish_length):
+def startTest(
+    test_info, figure, fps, path_length, start_length, finish_length, inverted
+):
     sleep_time = 1 / fps
-    st.session_state.data_mngr.setupSensorGroups(
-        st.session_state.sensor_mngr.getGroup("platform_1"),
-        st.session_state.sensor_mngr.getGroup("platform_2"),
-        False,
-    )
+    if inverted:
+        st.session_state.data_mngr.setupSensorGroups(
+            st.session_state.sensor_mngr.getGroup("platform_2"),
+            st.session_state.sensor_mngr.getGroup("platform_1"),
+            False,
+        )
+    else:
+        st.session_state.data_mngr.setupSensorGroups(
+            st.session_state.sensor_mngr.getGroup("platform_1"),
+            st.session_state.sensor_mngr.getGroup("platform_2"),
+            False,
+        )
     st.session_state.test_mngr.testStart()
     with st.spinner("Ejecutando prueba"):
         test_info.title("Quédate en el centro")
@@ -130,7 +139,18 @@ def level_normal():
     elif st.session_state.get("btn_rec_cancel", False):
         st.session_state.level_recorded = False
 
-    st.header(":material/directions_car: Modo carretera", divider="green", anchor=False)
+    if st.session_state.inverted_mode:
+        st.header(
+            ":material/directions_car: Modo carretera", divider="green", anchor=False
+        )
+        if not st.session_state.level_recorded:
+            st.error(
+                ":material/warning: **Modo espejo activo** - ¡Los controles están invertidos!"
+            )
+    else:
+        st.header(
+            ":material/directions_car: Modo carretera", divider="green", anchor=False
+        )
 
     figure = st.empty()
     test_info = st.empty()
@@ -138,17 +158,33 @@ def level_normal():
 
     if st.session_state.level_recorded:
         # Results and achievements
-        results = st.session_state.data_mngr.getResultsNormal()
+        results = st.session_state.data_mngr.getResultsNormal(
+            st.session_state.inverted_mode
+        )
         st.session_state.user_score = results["score"]
         position = results["position"]
         total = results["total"]
-        metric_col1, metric_col2, metric_col3 = st.columns([0.3, 0.2, 0.5])
+        metric_col1, metric_col2, metric_col3 = st.columns([0.3, 0.25, 0.45])
         metric_col1.metric(
-            "Posición ranking", f"Nº {position}", f"De {total} personas", "off"
+            "Posición ranking",
+            f"Nº {position}",
+            f"De {total} personas",
+            "off",
         )
-        metric_col2.metric(
-            "Puntuación", f"{int(st.session_state.user_score):d}", f"De 1000", "off"
-        )
+        if st.session_state.inverted_mode:
+            metric_col2.metric(
+                "Puntuación",
+                f"{int(st.session_state.user_score):d}",
+                f"De 1500 (x1.5)",
+                "normal",
+            )
+        else:
+            metric_col2.metric(
+                "Puntuación",
+                f"{int(st.session_state.user_score):d}",
+                f"De 1000",
+                "off",
+            )
 
         achievements = getAchievements(position, total)
         if achievements:
@@ -218,7 +254,17 @@ def level_normal():
         test_btns.empty()
         if not st.session_state.demo_enabled:
             logger.info("Starting platform record!")
-            startTest(test_info, figure, fps, path_length, start_length, finish_length)
+            if st.session_state.inverted_mode:
+                logger.info("¡Inverted mode enabled!")
+            startTest(
+                test_info,
+                figure,
+                fps,
+                path_length,
+                start_length,
+                finish_length,
+                st.session_state.inverted_mode,
+            )
         else:
             logger.info("Starting demo!")
             startDemo(test_info, figure, fps, path_length, start_length, finish_length)
