@@ -17,9 +17,6 @@ achievement_top:
   15:
     - "**TOP 15** - ¡Has quedado entre los 15 primeros!"
     - ":material/social_leaderboard:"
-  20:
-    - "**TOP 20** - ¡Has quedado entre los 20 primeros!"
-    - ":material/social_leaderboard:"
 
 achievement_percentage:
   10:
