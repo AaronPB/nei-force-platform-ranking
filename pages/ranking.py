@@ -6,10 +6,12 @@ from src.managers import DataManager
 from pages import level_normal, level_hard
 
 # Define image sliders
-# TODO Add proper sliders
 sliders = [
     dict(title="", text="", img="images/nei_almeria_2024.jpg"),
-    dict(title="", text="", img="images/force_platform_logo.png"),
+    dict(title="", text="", img="images/slider1.jpg"),
+    dict(title="", text="", img="images/slider2.jpg"),
+    dict(title="", text="", img="images/slider3.jpg"),
+    dict(title="", text="", img="images/slider4.jpg"),
 ]
 
 
