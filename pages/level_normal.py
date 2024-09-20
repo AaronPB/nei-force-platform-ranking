@@ -33,11 +33,9 @@ def getAchievements(position: int, total: int) -> dict:
     return achievements
 
 
-def startTest(
-    test_info, figure, fps, path_length, start_length, finish_length, inverted
-):
+def startTest(test_info, figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
-    if inverted:
+    if st.session_state.inverted_mode:
         st.session_state.data_mngr.setupSensorGroups(
             st.session_state.sensor_mngr.getGroup("platform_2"),
             st.session_state.sensor_mngr.getGroup("platform_1"),
@@ -256,15 +254,7 @@ def level_normal():
             logger.info("Starting platform record!")
             if st.session_state.inverted_mode:
                 logger.info("¡Inverted mode enabled!")
-            startTest(
-                test_info,
-                figure,
-                fps,
-                path_length,
-                start_length,
-                finish_length,
-                st.session_state.inverted_mode,
-            )
+            startTest(test_info, figure, fps, path_length, start_length, finish_length)
         else:
             logger.info("Starting demo!")
             startDemo(test_info, figure, fps, path_length, start_length, finish_length)
