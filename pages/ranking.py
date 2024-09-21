@@ -25,7 +25,7 @@ def ranking():
     if "inverted_mode" not in st.session_state:
         st.session_state.inverted_mode = False
 
-    carousel(items=sliders, controls=False, container_height=200)
+    carousel(items=sliders, controls=False, container_height=200, interval=4000)
 
     col1, col2 = st.columns(2)
 
@@ -59,13 +59,13 @@ def ranking():
         use_container_width=True,
     )
     btn_level_normal_inverted = col1.button(
-        label="Iniciar desafío espejo",
+        label="Iniciar desafío **espejo**",
         key="btn_test_normal_inverted",
         type="primary",
         use_container_width=True,
     )
     btn_level_hard_inverted = col2.button(
-        label="Iniciar desafío espejo",
+        label="Iniciar desafío **espejo**",
         key="btn_test_hard_inverted",
         type="primary",
         use_container_width=True,
@@ -87,6 +87,9 @@ def ranking():
     df_hard = st.session_state.data_mngr.getScoreboardHard()
 
     if not df_normal.empty:
+        col1.write(
+            f":material/social_leaderboard: **TOP-15** de {len(df_normal)} participantes"
+        )
         col1.dataframe(
             data=df_normal.iloc[0:15, :],
             use_container_width=True,
@@ -97,6 +100,9 @@ def ranking():
             height=565,
         )
     if not df_hard.empty:
+        col2.write(
+            f":material/social_leaderboard: **TOP-15** de {len(df_hard)} participantes"
+        )
         col2.dataframe(
             data=df_hard.iloc[0:15, :],
             use_container_width=True,
