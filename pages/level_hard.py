@@ -33,7 +33,7 @@ def getAchievements(position: int, total: int) -> dict:
     return achievements
 
 
-def startTest(test_info, figure, fps, path_length, start_length, finish_length):
+def startTest(figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
     if st.session_state.inverted_mode:
         st.session_state.data_mngr.setupSensorGroups(
@@ -48,19 +48,21 @@ def startTest(test_info, figure, fps, path_length, start_length, finish_length):
             False,
         )
     st.session_state.test_mngr.testStart()
-    with st.spinner("Ejecutando prueba"):
-        test_info.title("Quédate en el centro")
+    with st.status("Iniciando desafío modo derrapes", expanded=True) as status:
+        info = st.empty()
+        info.title("Prepárate")
         for i in range(start_length):
             st.session_state.test_mngr.testRegisterValues()
             figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(i))
             time.sleep(sleep_time)
-        test_info.title("¡Sigue el camino!")
+        status.update(label="Grabando movimientos", expanded=True)
+        info.title("¡Sigue el camino!")
         for i in range(path_length):
             idx = i + start_length
             st.session_state.test_mngr.testRegisterValues()
             figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
-        test_info.title("¡Completado!")
+        status.update(label="¡Desafío completado!", state="complete", expanded=False)
         for i in range(finish_length - fps):
             idx = i + start_length + path_length
             st.session_state.test_mngr.testRegisterValues()
@@ -69,14 +71,21 @@ def startTest(test_info, figure, fps, path_length, start_length, finish_length):
     st.session_state.test_mngr.testStop()
 
 
-def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
+def startDemo(figure, fps, path_length, start_length, finish_length):
     sleep_time = 1 / fps
     global_path = st.session_state.data_mngr.global_path
-    st.session_state.data_mngr.setupSensorGroups(
-        st.session_state.sensor_mngr.getGroup("platform_1"),
-        st.session_state.sensor_mngr.getGroup("platform_2"),
-        True,
-    )
+    if st.session_state.inverted_mode:
+        st.session_state.data_mngr.setupSensorGroups(
+            st.session_state.sensor_mngr.getGroup("platform_2"),
+            st.session_state.sensor_mngr.getGroup("platform_1"),
+            True,
+        )
+    else:
+        st.session_state.data_mngr.setupSensorGroups(
+            st.session_state.sensor_mngr.getGroup("platform_1"),
+            st.session_state.sensor_mngr.getGroup("platform_2"),
+            True,
+        )
     st.session_state.data_mngr.clearSensorData()
     # Prepare sensor data injection
     force_total = 800
@@ -89,15 +98,17 @@ def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
         )
         platform_left.append(platform_left_values)
         platform_right.append(platform_right_values)
-    with st.spinner("Ejecutando prueba"):
-        test_info.title("Quédate en el centro")
+    with st.status("(DEMO) Iniciando desafío modo derrapes", expanded=True) as status:
+        info = st.empty()
+        info.title("Prepárate")
         for i in range(start_length):
             st.session_state.data_mngr.setDemoPlatformForces(
                 platform_left[i], platform_right[i]
             )
             figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(i))
             time.sleep(sleep_time)
-        test_info.title("¡Sigue el camino!")
+        status.update(label="(DEMO) Grabando movimientos", expanded=True)
+        info.title("¡Sigue el camino!")
         for i in range(path_length):
             idx = i + start_length
             st.session_state.data_mngr.setDemoPlatformForces(
@@ -105,7 +116,9 @@ def startDemo(test_info, figure, fps, path_length, start_length, finish_length):
             )
             figure.plotly_chart(st.session_state.data_mngr.getFramedFigure(idx))
             time.sleep(sleep_time)
-        test_info.title("¡Completado!")
+        status.update(
+            label="(DEMO) ¡Desafío completado!", state="complete", expanded=False
+        )
         for i in range(finish_length - fps):
             idx = i + start_length + path_length
             st.session_state.data_mngr.setDemoPlatformForces(
@@ -250,16 +263,16 @@ def level_hard():
             st.session_state.recording = False
             st.switch_page(st.Page(level_hard))
             return
+        test_info.empty()
         test_btns.empty()
         if not st.session_state.demo_enabled:
             logger.info("Starting platform record!")
             if st.session_state.inverted_mode:
                 logger.info("¡Inverted mode enabled!")
-            startTest(test_info, figure, fps, path_length, start_length, finish_length)
+            startTest(figure, fps, path_length, start_length, finish_length)
         else:
             logger.info("Starting demo!")
-            startDemo(test_info, figure, fps, path_length, start_length, finish_length)
+            startDemo(figure, fps, path_length, start_length, finish_length)
 
-        test_info.empty()
         st.session_state.level_recorded = True
         st.switch_page(st.Page(level_hard))
