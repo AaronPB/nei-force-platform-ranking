@@ -2,7 +2,7 @@
 
 Se trata de una aplicación interactiva con plataformas de fuerza para la Noche Europea de los Investigadores.
 
-El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster, mostrando una versión simplificada e interactiva del software `force_platform_reader` desarrollado.
+El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster, mostrando una versión simplificada e interactiva del software `force_platform_reader` desarrollado (proyecto aún privado).
 
 <p align="center">
   <a href="https://lanochedelosinvestigadores.fundaciondescubre.es/" target="_blank"><img alt="NEI 2024 information" src="images/nei_almeria_2024.jpg"></a>
@@ -38,7 +38,11 @@ Este modo simula los ratios de voltaje obtenidos por los sensores de la platafor
 > [!WARNING]
 > Para utilizarlo se requieren dos plataformas de fuerza verticales con sensores compatibles con PhidgetBridge. En caso contrario, debe modificar el [driver](src/handlers/drivers/phidgetLoadCell.py) para utilizar la API de los sensores que utilicen sus plataformas.
 
-A continuación se muestran tres maneras de instalar la aplicación y hacerlo funcionar con [streamlit](https://streamlit.io/) de manera local.
+A continuación se muestran tres maneras de instalar la aplicación y hacerlo funcionar con [streamlit](https://streamlit.io/) de manera local en la ruta:
+
+```
+http://localhost:8501/
+```
 
 ## Utilizando Docker
 
@@ -58,7 +62,7 @@ Arranca un contenedor con las rutas USB compartidas, para poder acceder a las pl
 > [!IMPORTANT]
 > El indicador `--privileged` da permisos totales al contenedor, para evitar problemas a la hora de reconectar sensores.
 >
-> Si por seguridad prefieres evitarlo, debes indicar todas las rutas a cada sensor de manera manual, agregando los volúmenes correspondientes con `-v`. Ten en cuenta que se puede perder la comunicación al desconectar USBs.
+> Si por seguridad prefieres evitarlo, debes indicar todas las rutas a cada sensor de manera manual, agregando los volúmenes correspondientes con `-v`. Ten en cuenta que se puede perder la comunicación al desconectar USBs, debiendo reiniciar el contenedor. Asegúrate de tener conectados los sensores antes de iniciar el contenedor.
 
 ```bash
 docker run --name nei-fp-app -p 8501:8501 --privileged nei-force-platform-ranking
@@ -107,7 +111,7 @@ sudo apt-get install -y libphidget22
 
 > Para [Windows](https://www.phidgets.com/docs/OS_-_Windows#Quick_Downloads) o [MacOS](https://www.phidgets.com/docs/OS_-_macOS#Quick_Downloads)
 
-Posteriormente, descarga los requisitos necesarios vía `pip`.
+Posteriormente, descarga los [requisitos](requirements.txt) necesarios vía `pip`.
 
 > [!TIP]
 > Este proyecto se ha desarrollado con Python `3.10.12`.
