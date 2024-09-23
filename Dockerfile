@@ -4,31 +4,32 @@ LABEL maintainer="AaronPB"
 # Install base dependencies and Python 3.10 (default on ubuntu 22.04)
 RUN apt-get update && apt-get install -y \
     curl \
+    git \
     software-properties-common \
     python3 \
     python3-pip
 
-# TODO Install git and clone this repository into docker container, instead of copy.
-
-# Install dependencies
-## Phidget
+# Install Phidget dependency and clean up cache
 RUN curl -fsSL https://www.phidgets.com/downloads/setup_linux | bash &&\
-    apt-get install -y libphidget22 libusb-1.0-0
+    apt-get install -y libphidget22 libusb-1.0-0 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install python and python dependencies
-COPY requirements.txt requirements.txt
+# Clone the nei-foce-platform-ranking repository
+RUN git clone https://github.com/AaronPB/nei-force-platform-ranking.git /app
 
-# Use python3 -m pip to install dependencies
+# Define workdir as the cloned repository
+WORKDIR /app
+
+# Install python dependencies from the cloned repository's requirements.txt
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
-# Define workdir and copy project
-ENV prj_dir=/app/
-WORKDIR ${prj_dir}
-COPY . ${prj_dir}
-
+# Expose Streamlit port
 EXPOSE 8501
 
+# Healthcheck
 HEALTHCHECK CMD curl --fail http://localhost:8501/_store/health
 
+# Define entrypoint for Streamlit
 ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
