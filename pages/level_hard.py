@@ -145,10 +145,12 @@ def level_hard():
         )
         # Reset states
         st.session_state.level_recorded = False
+        st.session_state.get_balloons = False
         # Switch to ranking page
         st.switch_page(st.Page(ranking.ranking))
     elif st.session_state.get("btn_rec_cancel", False):
         st.session_state.level_recorded = False
+        st.session_state.get_balloons = False
 
     if st.session_state.inverted_mode:
         st.header(":material/car_crash: Modo derrapes", divider="red", anchor=False)
