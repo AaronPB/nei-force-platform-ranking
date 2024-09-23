@@ -16,7 +16,7 @@ RUN curl -fsSL https://www.phidgets.com/downloads/setup_linux | bash &&\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Clone the nei-foce-platform-ranking repository
-RUN git clone https://github.com/AaronPB/nei-force-platform-ranking.git /app
+RUN git clone --depth 1 https://github.com/AaronPB/nei-force-platform-ranking.git /app
 
 # Define workdir as the cloned repository
 WORKDIR /app
