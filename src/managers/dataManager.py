@@ -155,6 +155,7 @@ class DataManager:
             [self.df_scoreboard_normal, new_entry], ignore_index=True
         )
         self.df_scoreboard_normal.to_csv(self.file_path_normal, index=False)
+        logger.info(f"Saved new entry! Name: {name} - Detailed score: {score}")
 
     def updateScoreboardHard(self, name: str, score: float) -> None:
         if name in self.df_scoreboard_hard["name"].values:
@@ -169,6 +170,7 @@ class DataManager:
             [self.df_scoreboard_hard, new_entry], ignore_index=True
         )
         self.df_scoreboard_hard.to_csv(self.file_path_hard, index=False)
+        logger.info(f"Saved new entry! Name: {name} - Detailed score: {score}")
 
     # Getters
 
@@ -181,7 +183,7 @@ class DataManager:
             sensor.values.append(value)
 
     def getDemoPlatformForces(self, user_pose: float, force_total: float):
-        force_diff = force_total * (user_pose / 5)
+        force_diff = force_total * np.sign(user_pose) * (abs(user_pose) / 5) ** (1 / 2)
 
         force_right = (force_diff + force_total) / 2
         force_left = force_total - force_right
@@ -209,10 +211,7 @@ class DataManager:
         )
         force_diff = force_right - force_left
         force_total = force_right + force_left
-        if force_diff >= 0:
-            user_pose = min(5, 5 * (force_diff / force_total))
-        else:
-            user_pose = max(-5, -5 * (abs(force_diff) / force_total))
+        user_pose = 5 * np.sign(force_diff) * (force_diff / force_total) ** 2
         self.user_path = np.append(self.user_path, [user_pose])
         return self.plotly_fig.getFigure(index, [user_pose])
 
@@ -224,7 +223,7 @@ class DataManager:
     def getResultsNormal(self, bonus: bool = False) -> dict:
         score_max = 1000
         score_min = 400
-        max_diff = 600 * (self.fps / 20)
+        max_diff = 1000 * (self.fps / 20)
         df_score = self.getScoreboardNormal()
 
         # Get score
@@ -248,7 +247,7 @@ class DataManager:
     def getResultsHard(self, bonus: bool = False) -> dict:
         score_max = 1000
         score_min = 400
-        max_diff = 600 * (self.fps / 20)
+        max_diff = 1000 * (self.fps / 20)
         df_score = self.getScoreboardHard()
 
         # Get score
@@ -336,7 +335,7 @@ class TrajectoryFigure:
             y1=self.start_idx,
             xref="paper",
             yref="y",
-            line=dict(color="red", width=3, dash="dash"),
+            line=dict(color="#e70f67", width=3, dash="dash"),
         )
         self.figure.add_shape(
             type="line",
@@ -346,13 +345,13 @@ class TrajectoryFigure:
             y1=self.finish_idx,
             xref="paper",
             yref="y",
-            line=dict(color="red", width=3, dash="dash"),
+            line=dict(color="#e70f67", width=3, dash="dash"),
         )
         user_pose = go.Scatter(
             x=[0],
             y=[0],
             mode="markers",
-            marker=dict(symbol="triangle-up", size=22, color="red"),
+            marker=dict(symbol="triangle-up", size=22, color="#e70f67"),
             name="Jugador",
             showlegend=False,
         )
@@ -386,7 +385,7 @@ class TrajectoryFigure:
                     x=user_path,
                     y=np.linspace(0, len(user_path) - 1, len(user_path)),
                     mode="lines",
-                    line=dict(color="red", width=2),
+                    line=dict(color="#e70f67", width=2),
                     name="Camino trazado",
                 )
             )
