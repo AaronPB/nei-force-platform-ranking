@@ -12,19 +12,31 @@ achievement_top:
     - "**TOP 5** - ¡¡Has quedado entre los 5 primeros!!"
     - ":material/social_leaderboard:"
   10:
-    - "**TOP 10** - ¡¡Has quedado entre los 10 primeros!!"
+    - "**TOP 10** - ¡Has quedado entre los 10 primeros!"
     - ":material/social_leaderboard:"
   15:
     - "**TOP 15** - ¡Has quedado entre los 15 primeros!"
     - ":material/social_leaderboard:"
 
 achievement_percentage:
+  5:
+    - "**Monje tibetano** - Estás en el exclusivo **5%** de las personas con la puntuación más alta."
+    - ":material/clock_loader_10:"
   10:
-    - "**Del gremio de las estatuas** - ¡Estás dentro del **10%** de personas con mejor equilibrio!"
+    - "**Gremio de surfistas** - Formas parte del **10%** de las personas con la puntuación más alta."
     - ":material/clock_loader_10:"
   20:
-    - "**Lo puedes hacer sin oídos también** - Perteneces al **20%** de personas con mejor equilibrio"
+    - "**Caderas mágicas** - Estás en el **20%** de las personas con las mejores puntuaciones."
     - ":material/clock_loader_20:"
   40:
-    - "**Otra vez, por favor** - Eres parte del **40%** de personas con mejor equilibrio."
+    - "**Malabarista experto** - Formas parte del **40%** con las mejores puntuaciones."
     - ":material/clock_loader_40:"
+  60:
+    - "**Discípulo del yoga** - Estás dentro del **60%** con las puntuaciones más altas."
+    - ":material/clock_loader_60:"
+  80:
+    - "**Caminante de la cuerda floja** - Tu puntuación está en el **80%** de las mejores."
+    - ":material/clock_loader_80:"
+  110:
+    - "**Espíritu inquieto** - Te dejaste llevar y seguiste por un camino inesperado."
+    - ":material/clock_loader_90:"
