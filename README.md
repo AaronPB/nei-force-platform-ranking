@@ -2,13 +2,13 @@
 
 Se trata de una aplicación interactiva con plataformas de fuerza para la Noche Europea de los Investigadores.
 
-El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster, mostrando una versión simplificada e interactiva del software `force_platform_reader` desarrollado (proyecto aún privado).
+El objetivo con este proyecto es exponer el trabajo realizado con las plataformas de fuerza en mi Trabajo Fin de Máster, mostrando una versión simplificada e interactiva del [software `force_platform_reader`](https://github.com/AaronPB/force_platform) desarrollado.
 
 <p align="center">
   <a href="https://lanochedelosinvestigadores.fundaciondescubre.es/" target="_blank"><img alt="NEI 2024 information" src="images/nei_almeria_2024.jpg"></a>
   <br>
   <br>
-  <a href="#readme"><img alt="Force platform reader logo" src="images/force_platform_logo.png"></a>
+  <a href="https://github.com/AaronPB/force_platform"><img alt="Force platform reader logo" src="images/force_platform_logo.png"></a>
 </p>
 
 La aplicación consiste en un desafío en el que se debe seguir un camino 2D generado de manera aleatoria, estando de pie sobre dos plataformas de fuerza.
