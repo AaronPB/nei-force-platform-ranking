@@ -48,13 +48,10 @@ http://localhost:8501/
 
 Instala [Docker](https://www.docker.com/products/docker-desktop/) con lo necesario para que funcione en el OS.
 
-Crea una carpeta y copia el contenido del archivo [Dockerfile](Dockerfile) de este repositorio en un archivo `Dockerfile` creado en esa carpeta.
-
-Construye la imagen a partir del archivo `Dockerfile` creado.
+Importa el contenedor del GitHub Container Registry (GHCR) directamente a tu Docker:
 
 ```bash
-cd carpeta_con_dockerfile
-docker build -tag nei-force-platform-ranking .
+docker pull ghcr.io/aaronpb/nei-force-platform-ranking:latest
 ```
 
 Arranca un contenedor con las rutas USB compartidas, para poder acceder a las plataformas conectadas.
