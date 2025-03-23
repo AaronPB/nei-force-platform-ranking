@@ -1,5 +1,14 @@
 FROM ubuntu:22.04
-LABEL maintainer="AaronPB"
+LABEL maintainer="AaronPB <aaron.pb@psa.es>"
+LABEL version="1.0.0"
+LABEL description="Una aplicación interactiva con plataformas de fuerza para la Noche Europea de los Investigadores."
+LABEL license="GPL-3.0-or-later"
+LABEL repository="https://github.com/AaronPB/nei-force-platform-ranking"
+LABEL org.opencontainers.image.source="https://github.com/AaronPB/nei-force-platform-ranking"
+LABEL org.opencontainers.image.licenses="GPL-3.0-or-later"
+LABEL org.opencontainers.image.title="NEI Force Platform Ranking"
+LABEL org.opencontainers.image.description="Una aplicación interactiva con plataformas de fuerza para la Noche Europea de los Investigadores."
+
 
 # Install base dependencies and Python 3.10 (default on ubuntu 22.04)
 RUN apt-get update && apt-get install -y \
@@ -15,11 +24,9 @@ RUN curl -fsSL https://www.phidgets.com/downloads/setup_linux | bash &&\
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clone the nei-foce-platform-ranking repository
-RUN git clone --depth 1 https://github.com/AaronPB/nei-force-platform-ranking.git /app
-
-# Define workdir as the cloned repository
+# Define the workdir path and copy the repository content
 WORKDIR /app
+COPY . /app
 
 # Install python dependencies from the cloned repository's requirements.txt
 RUN python3 -m pip install --upgrade pip
