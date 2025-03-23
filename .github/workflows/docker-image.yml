@@ -21,13 +21,18 @@ jobs:
 
       - name: Extract release version
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      
+      - name: Convert repository owner to lowercase
+        run: echo "REPOSITORY_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build and tag Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/nei-force-platform-ranking:${{ env.RELEASE_VERSION }} .
-          docker tag ghcr.io/${{ github.repository_owner }}/nei-force-platform-ranking:${{ env.RELEASE_VERSION }} ghcr.io/${{ github.repository_owner }}/nei-force-platform-ranking:latest
+          IMAGE_NAME=ghcr.io/${{ env.REPOSITORY_OWNER }}/nei-force-platform-ranking
+          docker build -t $IMAGE_NAME:${{ env.RELEASE_VERSION }} .
+          docker tag $IMAGE_NAME:${{ env.RELEASE_VERSION }} $IMAGE_NAME:latest
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/nei-force-platform-ranking:${{ env.RELEASE_VERSION }}
-          docker push ghcr.io/${{ github.repository_owner }}/nei-force-platform-ranking:latest
+          IMAGE_NAME=ghcr.io/${{ env.REPOSITORY_OWNER }}/nei-force-platform-ranking
+          docker push $IMAGE_NAME:${{ env.RELEASE_VERSION }}
+          docker push $IMAGE_NAME:latest
