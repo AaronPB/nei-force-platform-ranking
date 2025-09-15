@@ -88,15 +88,10 @@ def main():
                 "Conecta las plataformas.",
                 icon=":material/error:",
             )
-        elif connected_sensor < 8:
+        else:
             st.sidebar.warning(
-                f"{connected_sensor} de 8 sensores conectados.",
+                f"{connected_sensor} sensores conectados.",
                 icon=":material/change_circle:",
-            )
-        elif connected_sensor == 8:
-            st.sidebar.success(
-                "Plataformas conectadas.",
-                icon=":material/check_circle:",
             )
             st.session_state.platforms_connected = True
 
