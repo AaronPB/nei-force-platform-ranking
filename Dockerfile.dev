@@ -20,4 +20,4 @@ COPY requirements.txt requirements.txt
 
 # Use python3 -m pip to install dependencies
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --upgrade --ignore-installed -r requirements.txt

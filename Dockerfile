@@ -30,7 +30,7 @@ COPY . /app
 
 # Install python dependencies from the cloned repository's requirements.txt
 RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir --ignore-installed -r requirements.txt
 
 # Expose Streamlit port
 EXPOSE 8501
